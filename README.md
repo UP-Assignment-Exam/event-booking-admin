@@ -1,6 +1,6 @@
-# 📊 Expense Tracker Frontend
+# 📊 Event Booking Admin
 
-A simple and modular **React** frontend for the Expense Tracker platform.
+A simple and modular **React** frontend for the Event Booking platform.
 
 ## 🔧 Requirements
 
@@ -42,8 +42,8 @@ REACT_APP_API_TOKEN=JXkWxYaqpvV90S-Z@sIoJxQyxS-ESI
 Clone the repository and install the dependencies:
 
 ```bash
-git clone https://github.com/your-username/expense-tracker-frontend.git
-cd expense-tracker-frontend
+git clone https://github.com/your-username/event-booking-admin.git
+cd event-booking-admin
 npm install -f
 ```
 
