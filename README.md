@@ -1,70 +1,78 @@
-# Getting Started with Create React App
+# 📊 Expense Tracker Frontend
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A simple and modular **React** frontend for the Expense Tracker platform.
 
-## Available Scripts
+## 🔧 Requirements
 
-In the project directory, you can run:
+- **Node.js** v20.18.3
+- A running **backend** server (`http://localhost:8098/web`)
+- Internet connection (for fonts or external APIs)
 
-### `npm start`
+## 📁 Folder Structure
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+```
+.
+├── public/                     # Static public assets
+└── src/
+    ├── assets/
+    │   ├── fonts/              # Custom fonts
+    │   ├── icons/              # Icon sets
+    │   └── images/             # Images used in UI
+    ├── constants/              # Application-wide constants
+    ├── global/                 # Global styles, themes, variables
+    ├── i18n/                   # Internationalization setup
+    ├── middlewares/           # Axios interceptors or request handlers
+    ├── pages/                 # Main page components and routes
+    └── utils/                 # Reusable utility functions
+```
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## ⚙️ Example `.env` File
 
-### `npm test`
+Create a `.env` file in the root of the project and add:
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+```
+REACT_APP_API_ENDPOINT=http://localhost:8098/web
+REACT_APP_API_TOKEN=JXkWxYaqpvV90S-Z@sIoJxQyxS-ESI
+```
 
-### `npm run build`
+> **Note**: Ensure the backend server is running and accessible at the `REACT_APP_API_ENDPOINT`.
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## 💼 Installation
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+Clone the repository and install the dependencies:
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+```bash
+git clone https://github.com/your-username/expense-tracker-frontend.git
+cd expense-tracker-frontend
+npm install -f
+```
 
-### `npm run eject`
+## 🚀 Start the Application
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+```bash
+npm start
+```
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+The application will be available at:  
+**http://localhost:3000**
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+## 🌐 Internationalization
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+This project supports multi-language translation using `react-i18next`. Translation files are located in the `src/i18n` directory.
 
-## Learn More
+## 📦 Build for Production
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+```bash
+npm run build
+```
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+The optimized static files will be generated in the `build/` directory.
 
-### Code Splitting
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+### 📝 Notes
 
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+- Make sure the backend is up and running.
+- API requests will use the `REACT_APP_API_ENDPOINT` and include the `REACT_APP_API_TOKEN` if required.
+- Font files must be licensed appropriately if custom fonts are used.
+- Axios interceptors and other HTTP middleware can be managed in the `src/middlewares` directory.
