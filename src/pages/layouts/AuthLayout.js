@@ -3,9 +3,7 @@ import { Outlet } from 'react-router'
 
 export default function AuthLayout() {
     return (
-        <div>
-            <h1>AuthLayout</h1>
-
+        <div className='position-relative'>
             <Outlet />
         </div>
     )
