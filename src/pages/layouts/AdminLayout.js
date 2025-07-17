@@ -43,7 +43,6 @@ export default function AdminLayout({ children }) {
     ]
     
     return (
-    
         <div className="d-flex">
             <div
                 className={`bg-dark text-white min-vh-100 d-flex flex-column p-3 transition-all`}

@@ -12,6 +12,8 @@ import ResetPasswordPage from './pages/auth/ResetPasswordPage';
 import SetupPasswordPage from './pages/auth/SetupPasswordPage';
 import Dashboard from './pages/dashboard/Dashboard';
 import AdminGuard from './middlewares/AdminGuard';
+import Event from './pages/dashboard/Event';
+import Customer from './pages/dashboard/Customer';
 
 function App() {
 
@@ -21,6 +23,8 @@ function App() {
         <Route element={<AdminGuard />}>
           <Route element={<AdminLayout />}>
             <Route index element={<Dashboard />} />
+            <Route path='/Event' index element={<Event/>} />
+            <Route path='/Customer' index element={<Customer/>}/>
             <Route path="*" element={<NotFoundPage />} />
           </Route>
         </Route>
