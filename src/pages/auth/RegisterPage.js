@@ -1,63 +1,160 @@
-import React from 'react'
+import React from 'react';
+import { Form, Input, Button, Dropdown, Menu, Typography, div, Select } from 'antd';
+import { DownOutlined } from '@ant-design/icons';
+import { UserOutlined, MailOutlined, PhoneOutlined, BankOutlined, CaretDownOutlined, ArrowRightOutlined } from '@ant-design/icons';
+import { Link } from 'react-router';
 
-export default function RegisterPage() {
+const { Title, Paragraph } = Typography;
+
+const RegisterPage = () => {
+  const [form] = Form.useForm();
+
+  const onFinish = (values) => {
+    console.log('Form Submitted:', values);
+    // Send data to API here
+  };
+
   return (
-    <div>
-      <div className="container-fluid mt-5">
-        <div className="row justify-content-center align-items-center">
-          <div className="col-md-5">
-            <div className="card shadow-sm">
-              <div className="card-body p-4">
-                <img src="/BayonPass_logo.png" class="w-50 h-50 d-flex justify-content-center align-items-center mx-auto" alt="Logo"/>
-                <form method="POST">
-                  <div className="mb-3">
-                    <label for="firstname" class="form-label">First Name</label>
-                    <input type="text" name="firstname" id="firstname" class="form-control" required></input>
-                  </div>
-                  <div className="mb-3">
-                    <label for="lastname" class="form-label">Last Name</label>
-                    <input type="lastname" name="lastname" id="lastname" class="form-control" required></input>
-                  </div>
-                  <div className="mb-3">
-                    <label for="email" class="form-label">Email</label>
-                    <input type="email" name="email" id="email" class="form-control" required></input>
-                  </div>
-                  <div className="mb-3">
-                    <label for="phone" class="form-label">Phone</label>
-                    <input type="phone" name="phone" id="phone" class="form-control" required></input>
-                  </div>
-                  <div className="mb-3">
-                    <label for="organizationname" class="form-label">Organization Name</label>
-                    <input type="organizationname" name="organizationname" id="organizationname" class="form-control" required></input>
-                  </div>
-                  <div class="dropdown mb-3">
-                    <button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-                      Select Option
-                    </button>
-                    <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                      <li><a class="dropdown-item" href="#" onclick="selectOption('Option 1')">Option 1</a></li>
-                      <li><a class="dropdown-item" href="#" onclick="selectOption('Option 2')">Option 2</a></li>
-                      <li><a class="dropdown-item" href="#" onclick="selectOption('Option 3')">Option 3</a></li>
-                    </ul>
-                  </div>
-                  <div class="mb-3">
-                    <label for="phone" class="form-label">Phone Number <small class="text-muted">(Optional)</small></label>
-                    <input type="tel" class="form-control" id="phone"></input>
-                  </div>
-                  <div class="mb-3">
-                    <label for="phone" class="form-label">Phone Number <small class="text-muted">(Optional)</small></label>
-                    <input type="tel" class="form-control" id="phone"></input>
-                  </div>
-                  <p>if you register is finish you can go to <a href='/login'>Login</a></p>
-                  <button type="submit" class="btn btn-dark w-100">Register</button>
-                </form>
-              </div>
-            </div>
-          </div>
+    <div className="p-4 register-form">
+      <div className="text-center mb-4">
+        <div className="logo-container">
+          <img
+            src="/logo.png"
+            alt="Logo"
+            className='logo'
+          />
         </div>
       </div>
 
+      <Title level={3} className="text-center mb-4 form-title">Register Account</Title>
 
+      <Form layout="vertical" form={form} onFinish={onFinish} className="modern-form">
+        <div className="form-row">
+          <Form.Item
+            label="First Name"
+            name="firstname"
+            rules={[{ required: true, message: 'Please enter your first name' }]}
+            className="form-item-half"
+          >
+            <Input
+              placeholder="Enter your first name"
+              className="modern-input"
+              size='large'
+
+              prefix={<UserOutlined className="input-icon" />}
+            />
+          </Form.Item>
+
+          <Form.Item
+            label="Last Name"
+            name="lastname"
+            rules={[{ required: true, message: 'Please enter your last name' }]}
+            className="form-item-half"
+          >
+            <Input
+              placeholder="Enter your last name"
+              className="modern-input"
+              size='large'
+              prefix={<UserOutlined className="input-icon" />}
+            />
+          </Form.Item>
+        </div>
+
+        <Form.Item
+          label="Email Address"
+          name="email"
+          rules={[
+            { required: true, message: 'Please enter your email' },
+            { type: 'email', message: 'Invalid email address' },
+          ]}
+        >
+          <Input
+            placeholder="example@email.com"
+            className="modern-input"
+            size='large'
+
+            prefix={<MailOutlined className="input-icon" />}
+          />
+        </Form.Item>
+
+        <Form.Item
+          label="Phone Number"
+          name="phone"
+          rules={[{ required: true, message: 'Please enter your phone number' }]}
+        >
+          <Input
+            placeholder="Enter your phone number"
+            className="modern-input"
+            size='large'
+            prefix={<PhoneOutlined className="input-icon" />}
+          />
+        </Form.Item>
+
+        <Form.Item
+          label="Organization Name"
+          name="organizationname"
+          rules={[{ required: true, message: 'Please enter organization name' }]}
+        >
+          <Input
+            placeholder="Enter your organization name"
+            className="modern-input"
+            size='large'
+            prefix={<BankOutlined className="input-icon" />}
+          />
+        </Form.Item>
+
+        <Form.Item
+          label="Select Category"
+          name="selectedOption"
+          rules={[{ required: true, message: 'Please select an option' }]}
+        >
+          <Select
+            placeholder="Choose an option"
+            size='large'
+            suffixIcon={<CaretDownOutlined className="select-icon" />}
+            options={[
+              { value: "Option 1", label: "Option 1" },
+              { value: "Option 2", label: "Option 2" },
+              { value: "Option 3", label: "Option 3" },
+            ]}
+          />
+        </Form.Item>
+
+        <Form.Item
+          className='custom-ant-form-item-label'
+          label="Secondary Phone Number"
+          name="optionalPhone"
+          tooltip="Optional field"
+        >
+          <Input
+            placeholder="Enter another phone number (optional)"
+            className="modern-input optional-input"
+            size='large'
+            prefix={<PhoneOutlined className="input-icon" />}
+          />
+        </Form.Item>
+
+        <div className="form-footer">
+          <Paragraph className="text-center login-link">
+            Already have an account? <Link to="/login" className="auth-link">Sign in here</Link>
+          </Paragraph>
+
+          <Form.Item className="submit-container">
+            <Button
+              type="primary"
+              htmlType="submit"
+              block
+              size="large"
+              className="modern-submit-btn"
+            >
+              <span>Register Account</span>
+              <ArrowRightOutlined className="submit-icon" />
+            </Button>
+          </Form.Item>
+        </div>
+      </Form>
     </div>
-  )
-}
+  );
+};
+
+export default RegisterPage;

@@ -15,7 +15,7 @@ root.render(
     <ConfigProvider
       theme={{
         token: {
-          fontFamily: "OpenSans",
+          fontFamily: "Montserrat, sans-serif",
         },
         components: {},
       }}
