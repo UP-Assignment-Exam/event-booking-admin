@@ -144,14 +144,14 @@
 }
 
 /* Form Labels */
-.ant-form-item-label>label {
+:where(.auth-background) .ant-form-item-label>label {
     color: #2c3e50 !important;
     font-weight: 500 !important;
     font-size: 14px !important;
     margin-bottom: 8px !important;
 }
 
-.ant-form-item-label>label::after {
+:where(.auth-background) .ant-form-item-label>label::after {
     display: none !important;
 }
 
@@ -770,7 +770,7 @@
     :where(.modern-checkbox).ant-checkbox-wrapper>span,
     :where(.custom-ant-form-item-label) .ant-form-item-tooltip>svg,
     .login-link,
-    .ant-form-item-label>label,
+    :where(.auth-background) .ant-form-item-label>label,
     .login-title,
     .form-title {
         color: #ffffff !important;

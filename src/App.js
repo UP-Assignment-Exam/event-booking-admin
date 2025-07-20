@@ -1,5 +1,5 @@
 import './App.css';
-import { Route, Routes } from 'react-router';
+import { Navigate, Route, Routes } from 'react-router';
 import { BrowserRouter } from 'react-router-dom';
 import NotFoundPage from './pages/NotFoundPage';
 import AdminLayout from './pages/layouts/AdminLayout';
@@ -13,6 +13,14 @@ import Dashboard from './pages/dashboard/Dashboard';
 import AdminGuard from './middlewares/AdminGuard';
 import Event from './pages/dashboard/Event';
 import Customer from './pages/dashboard/Customer';
+import RolesPermissionsPage from './pages/dashboard/Roles/RolesPermissionsPage';
+import RightPermissionPage from './pages/dashboard/rights/RightPermissionPage';
+import DashboardPage from './pages/dashboard/Dashboards/DashboardPage';
+import TicketTypePage from './pages/dashboard/TicketTypes/TicketTypePages';
+import CategoryPage from './pages/dashboard/Categories/CategoryPage';
+import PaymentMethodPage from './pages/dashboard/PaymentMethods/PaymentMethodPage';
+import OrganizationRequests from './pages/dashboard/Organizations/OrganizationPage';
+
 
 function App() {
 
@@ -21,9 +29,16 @@ function App() {
       <Routes>
         <Route element={<AdminGuard />}>
           <Route element={<AdminLayout />}>
-            <Route index element={<Dashboard />} />
-            <Route path='/Event' index element={<Event/>} />
-            <Route path='/Customer' index element={<Customer/>}/>
+            <Route index element={<Navigate to="/dashboard" replace />} />
+            <Route path='/dashboard' element={<DashboardPage />} />
+            <Route path='/payment-methods' element={<PaymentMethodPage />} />
+            <Route path='/organizations' element={<OrganizationRequests />} />
+            <Route path='/ticket-types' element={<TicketTypePage />} />
+            <Route path='/categories' element={<CategoryPage />} />
+            <Route path='/rights' index element={<RightPermissionPage />} />
+            <Route path='/roles' index element={<RolesPermissionsPage />} />
+            <Route path='/Event' index element={<Event />} />
+            <Route path='/Customer' index element={<Customer />} />
             <Route path="*" element={<NotFoundPage />} />
           </Route>
         </Route>

@@ -5,25 +5,35 @@ import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { ConfigProvider } from 'antd';
 import { Provider } from 'react-redux';
-import store from './global/Store';
+import store from './global';
 import './i18n/config'
 import 'bootstrap/dist/css/bootstrap.min.css';
+import ThemeProvider from './components/providers/ThemeProvider';
+import timezone from 'dayjs/plugin/timezone';
+import utc from 'dayjs/plugin/utc';
+import dayjs from 'dayjs';
+
+// Extend dayjs with timezone support
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <ConfigProvider
-      theme={{
-        token: {
-          fontFamily: "Montserrat, sans-serif",
-        },
-        components: {},
-      }}
-    >
-      <Provider store={store}>
-        <App />
-      </Provider>
-    </ConfigProvider>
+    <Provider store={store}>
+      <ConfigProvider
+        theme={{
+          token: {
+            fontFamily: "Montserrat, sans-serif",
+          },
+          components: {},
+        }}
+      >
+        <ThemeProvider>
+          <App />
+        </ThemeProvider>
+      </ConfigProvider>
+    </Provider>
   </React.StrictMode>
 );
 
