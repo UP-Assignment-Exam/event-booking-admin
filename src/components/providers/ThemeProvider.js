@@ -51,7 +51,7 @@ const ThemeProvider = ({ children }) => {
 
     const themeConfig = getThemeConfig(isDarkMode);
 
-    if (!initialized) return null; // prevent flash of default theme
+    if (!initialized) return children; // prevent flash of default theme
 
     return (
         <ConfigProvider theme={themeConfig}>

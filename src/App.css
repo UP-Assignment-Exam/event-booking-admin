@@ -156,7 +156,19 @@
 }
 
 /* Modern Input Styling */
+.modern--textarea {
+    color: #000000 !important;
+    border: 2px solid #e1e8ed !important;
+    border-radius: 12px !important;
+    background: rgba(255, 255, 255, 0.9) !important;
+    transition: all 0.3s ease !important;
+    font-size: 15px !important;
+    padding: 12px 16px !important;
+    backdrop-filter: blur(10px) !important;
+}
+
 .modern-input {
+    color: #000000 !important;
     height: 48px !important;
     border: 2px solid #e1e8ed !important;
     border-radius: 12px !important;
@@ -167,11 +179,13 @@
     backdrop-filter: blur(10px) !important;
 }
 
+.modern--textarea:hover,
 .modern-input:hover {
     border-color: #667eea !important;
     box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1) !important;
 }
 
+.modern--textarea:focus,
 .modern-input:focus {
     border-color: #667eea !important;
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1) !important;
@@ -199,6 +213,7 @@
     transition: all 0.3s ease !important;
     padding: 8px 16px !important;
     backdrop-filter: blur(10px) !important;
+    color: #000000 !important;
 }
 
 .modern-select .ant-select-selector:hover {
@@ -723,6 +738,10 @@
     animation: spin 1s linear infinite;
 }
 
+:where(.modern-form) .ant-input-affix-wrapper>input.ant-input {
+    color: black !important;
+}
+
 @keyframes spin {
     from {
         transform: rotate(0deg);
@@ -756,6 +775,9 @@
 
 /* Dark Mode Support (Optional) */
 @media (prefers-color-scheme: dark) {
+    .modern-select .ant-select-selector {
+        color: #000000 !important;
+    }
 
     .login-form,
     .register-form,

@@ -25,7 +25,7 @@ import {
 } from '@ant-design/icons';
 import { TiTicket } from 'react-icons/ti';
 import "./AdminLayout.css"; // Assuming you have a CSS file for styles
-import { Outlet, useNavigate } from 'react-router';
+import { Outlet, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { toggleTheme } from '../../global/slices/ThemeSlice';
 import { AiOutlineBank } from 'react-icons/ai';
@@ -33,6 +33,7 @@ import { AiOutlineBank } from 'react-icons/ai';
 const { Header, Sider, Content } = Layout;
 
 const AdminLayout = () => {
+    const { user } = useSelector((state) => state.auth);
     const navigate = useNavigate();
     const dispatch = useDispatch();
     const isDarkMode = useSelector((state) => state.theme.isDarkMode);
@@ -257,8 +258,8 @@ const AdminLayout = () => {
                                 >
                                     <div className="user-profile">
                                         <div className="user-info">
-                                            <div className="user-name">John Doe</div>
-                                            <div className="user-role">Super Admin</div>
+                                            <div className="user-name">{user?.username || "John Doe"}</div>
+                                            <div className="user-role">{user?.role?.name || "Super Admin"}</div>
                                         </div>
                                         <Avatar
                                             size={36}

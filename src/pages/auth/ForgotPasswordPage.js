@@ -1,21 +1,49 @@
 import { Form, Input, Button, message } from 'antd';
 import { MailOutlined, ArrowRightOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import { useState } from 'react';
-import { Link } from 'react-router';
+import { Link } from 'react-router-dom'; // ✅ correct for both v5 & v6
+import httpClient from '../../utils/HttpClient';
+import { extractErrorMessage } from '../../utils/Utils';
+import { AUTH_FORGOT_PASSWORD_URL } from '../../constants/Url';
 
 export default function ForgotPasswordPage() {
+  const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState("");
   const [emailSent, setEmailSent] = useState(false);
 
-  const handleSend = (values) => {
-    // Replace with actual API call
-    console.log('Sending reset email to:', values.email);
-    setEmailSent(true);
-    message.success('Password reset email sent!');
+  const handleSend = async (data) => {
+    try {
+      setLoading(true);
+      await httpClient.post(AUTH_FORGOT_PASSWORD_URL, {
+        email: data.email,
+      }).then((res) => res.data);
+
+      setEmailSent(true);
+      setEmail(data.email);
+      message.info("If an account with that email exists, we have sent a password reset link.");
+    } catch (error) {
+      message.error(extractErrorMessage(error));
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleResend = () => {
+  const handleResend = async () => {
+    try {
+      setLoading(true);
+      await httpClient.post(AUTH_FORGOT_PASSWORD_URL, {
+        email: email,
+        resend: true,
+      }).then((res) => res.data);
+
+      setEmailSent(true);
+      message.info('Reset email resent.');
+    } catch (error) {
+      message.error(extractErrorMessage(error));
+    } finally {
+      setLoading(false);
+    }
     // Replace with actual API call
-    message.info('Reset email resent.');
   };
 
   return (
@@ -58,6 +86,7 @@ export default function ForgotPasswordPage() {
               block
               size="large"
               className="modern-submit-btn"
+              loading={loading}
             >
               <span>Send Reset Email</span>
               <ArrowRightOutlined className="submit-icon" />

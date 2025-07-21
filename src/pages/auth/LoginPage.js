@@ -1,12 +1,43 @@
-import { Button, Checkbox, Divider, Form, Input } from 'antd'
-import React from 'react'
-import { Link } from 'react-router'
+import { Button, Checkbox, Divider, Form, Input, message } from 'antd'
+import React, { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'; // ✅ correct for both v5 & v6
 import { MailOutlined, LockOutlined, ArrowRightOutlined } from '@ant-design/icons';
+import httpClient from '../../utils/HttpClient';
+import { extractErrorMessage } from '../../utils/Utils';
+import { useDispatch } from 'react-redux';
+import { loginSuccess } from '../../global/slices/AuthSlice';
+import { AUTH_LOGIN_URL } from '../../constants/Url';
 
 export default function LoginPage() {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = () => {
+  const handleSubmit = async (data) => {
+    try {
+      setLoading(true);
+      const res = await httpClient.post(AUTH_LOGIN_URL, {
+        email: data.email,
+        password: data.password,
+        remember: data.remember,
+      }).then((res) => res.data);
 
+      if (res.status === 200) {
+        // Store user data in local storage or context
+        dispatch(loginSuccess({ user: res.data?.user, token: res.data?.token }));
+        // Optionally, you can also store the user role or permissions
+
+        message.success('Login successful!');
+        // Redirect to dashboard or home page
+        navigate('/dashboard'); // Adjust the redirect path as needed
+      } else {
+        message.error('Login failed: ' + res.message);
+      }
+    } catch (error) {
+      message.error(extractErrorMessage(error));
+    } finally {
+      setLoading(false);
+    }
   }
   return (
     <div className="p-4 login-form">
@@ -98,6 +129,7 @@ export default function LoginPage() {
             block
             size="large"
             className="modern-submit-btn"
+            loading={loading}
           >
             <span>Sign In</span>
             <ArrowRightOutlined className="submit-icon" />

@@ -68,3 +68,25 @@ export const objectToQuery = (uri, obj) => {
 
     return `${uri}?` + Object.keys(cleanedObj).map(key => key + '=' + cleanedObj[key]).join('&');
 };
+
+export function extractErrorMessage(error) {
+    // Axios error with response and message from backend
+    if (error?.response?.data?.message) {
+        return error.response.data.message;
+    }
+    // Axios error with response and errors array (common in validation errors)
+    if (error?.response?.data?.errors && Array.isArray(error.response.data.errors)) {
+        return error.response.data.errors.map(e => e.msg || e.message).join(', ');
+    }
+    // Axios error with generic response data message (fallback)
+    if (error?.response?.data) {
+        if (typeof error.response.data === 'string') return error.response.data;
+        if (error.response.data.error) return error.response.data.error;
+    }
+    // Generic error.message fallback
+    if (error?.message) {
+        return error.message;
+    }
+    // Fallback string
+    return "An unknown error occurred";
+}

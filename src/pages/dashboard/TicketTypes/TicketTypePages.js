@@ -259,8 +259,8 @@ const TicketTypePage = () => {
                         { max: 100, message: 'Title cannot exceed 100 characters' }
                     ]}
                 >
-                    <Input 
-                        placeholder="Enter ticket type title" 
+                    <Input
+                        placeholder="Enter ticket type title"
                         prefix={<FileTextOutlined />}
                         showCount
                         maxLength={100}
@@ -276,8 +276,8 @@ const TicketTypePage = () => {
                         { max: 500, message: 'Description cannot exceed 500 characters' }
                     ]}
                 >
-                    <TextArea 
-                        rows={4} 
+                    <TextArea
+                        rows={4}
                         placeholder="Describe the ticket type and its features"
                         showCount
                         maxLength={500}
@@ -326,7 +326,7 @@ const TicketTypePage = () => {
                             <span style={{ marginRight: '8px', fontWeight: 500 }}>Total Ticket Types</span>
                         </Badge>
                     </div>
-                    
+
                     <Table
                         columns={columns}
                         dataSource={ticketTypes}

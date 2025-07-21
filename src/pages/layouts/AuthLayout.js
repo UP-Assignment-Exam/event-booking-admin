@@ -1,6 +1,6 @@
 import React from 'react'
 import { useDispatch, useSelector } from 'react-redux';
-import { Outlet } from 'react-router'
+import { Outlet } from 'react-router-dom'
 
 export default function AuthLayout() {
     const isDarkMode = useSelector((state) => state.theme.isDarkMode);
