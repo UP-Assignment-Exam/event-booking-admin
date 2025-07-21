@@ -1,23 +1,23 @@
 .admin-layout {
-  position: relative;
-  overflow: hidden;
+    position: relative;
+    overflow: hidden;
 }
 
 .admin-layout::before {
-  content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  opacity: 0.03;
-  pointer-events: none;
-  z-index: -1;
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    opacity: 0.03;
+    pointer-events: none;
+    z-index: -1;
 }
 
 .dark-theme .admin-layout::before {
-  opacity: 0.08;
+    opacity: 0.08;
 }
 
 :where(.admin-header).ant-layout-header {
@@ -270,6 +270,8 @@
     z-index: 8 !important;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2) !important;
     border: 1px solid rgba(102, 126, 234, 0.3) !important;
+    overflow: hidden scroll !important;
+    scrollbar-width: none !important;
 }
 
 .sidebar-menu .ant-menu {

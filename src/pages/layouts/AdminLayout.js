@@ -135,9 +135,10 @@ const AdminLayout = () => {
 
     const handleUserMenuClick = ({ key }) => {
         if (key === 'logout') {
+            navigate(`/login`);
             console.log('Logging out...');
-            // Add logout logic here
         } else {
+            navigate(`/${key}`);
             console.log('User menu action:', key);
         }
     };

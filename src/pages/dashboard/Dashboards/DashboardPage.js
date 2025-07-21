@@ -267,7 +267,7 @@ export default function DashboardPage() {
                         alignItems: 'center'
                     }}>
                         <span>Recent Events</span>
-                        <Button
+                        {/* <Button
                             type="primary"
                             icon={<PlusOutlined />}
                             onClick={() => setIsModalVisible(true)}
@@ -276,7 +276,7 @@ export default function DashboardPage() {
                             }}
                         >
                             Create Event
-                        </Button>
+                        </Button> */}
                     </div>
                 }
             >

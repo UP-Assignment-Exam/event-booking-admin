@@ -426,15 +426,19 @@ const OrganizationRequests = () => {
     ];
 
     return (
-        <div style={{ padding: '24px', background: 'transparent' }}>
+        <div style={{ background: 'transparent' }}>
             {/* Header Section */}
-            <div style={{ marginBottom: '24px' }}>
-                <Title level={2} style={{ margin: 0, marginBottom: '8px' }}>
+            <div
+                style={{
+                    marginBottom: '16px'
+                }}
+            >
+                <h3 style={{ margin: 0, color: '#667eea' }}>
                     Organization Requests
-                </Title>
-                <Text type="secondary">
+                </h3>
+                <p style={{ margin: '4px 0 0 0', color: '#64748b' }}>
                     Review and manage organization registration requests
-                </Text>
+                </p>
             </div>
 
             {/* Stats Cards */}

@@ -20,6 +20,8 @@ import TicketTypePage from './pages/dashboard/TicketTypes/TicketTypePages';
 import CategoryPage from './pages/dashboard/Categories/CategoryPage';
 import PaymentMethodPage from './pages/dashboard/PaymentMethods/PaymentMethodPage';
 import OrganizationRequests from './pages/dashboard/Organizations/OrganizationPage';
+import ProfilePage from './pages/dashboard/Profiles/ProfilePage';
+import SettingPage from './pages/dashboard/Settings/SettingPage';
 
 
 function App() {
@@ -30,6 +32,8 @@ function App() {
         <Route element={<AdminGuard />}>
           <Route element={<AdminLayout />}>
             <Route index element={<Navigate to="/dashboard" replace />} />
+            <Route path='/preferences' element={<SettingPage />} />
+            <Route path='/profile' element={<ProfilePage />} />
             <Route path='/dashboard' element={<DashboardPage />} />
             <Route path='/payment-methods' element={<PaymentMethodPage />} />
             <Route path='/organizations' element={<OrganizationRequests />} />

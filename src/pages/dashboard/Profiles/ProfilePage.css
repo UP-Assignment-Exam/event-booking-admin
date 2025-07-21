@@ -1,0 +1,291 @@
+/* ProfileDetail.css */
+
+.profile-detail {
+    padding: 0;
+    min-height: 100vh;
+}
+
+/* Header Card Styles */
+.profile-header-card {
+    margin-bottom: 24px;
+    border-radius: 16px !important;
+    overflow: hidden;
+    border: none !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1) !important;
+    transition: all 0.3s ease;
+}
+
+.light-theme .profile-header-card .ant-card-body {
+    background: rgba(255, 255, 255, 0.95) !important;
+    backdrop-filter: blur(20px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+.dark-theme .profile-header-card .ant-card-body {
+    background: rgba(30, 30, 45, 0.95) !important;
+    backdrop-filter: blur(20px) !important;
+    border: 1px solid rgba(102, 126, 234, 0.3) !important;
+}
+
+.avatar-section {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.profile-avatar {
+    border: 4px solid rgba(102, 126, 234, 0.3) !important;
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3) !important;
+    transition: all 0.3s ease !important;
+}
+
+.profile-avatar:hover {
+    border-color: #667eea !important;
+    box-shadow: 0 12px 35px rgba(102, 126, 234, 0.5) !important;
+    transform: translateY(-2px) !important;
+}
+
+.profile-info {
+    padding: 16px 0;
+}
+
+.profile-name-section {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.profile-name {
+    margin: 0 !important;
+    font-size: 28px !important;
+    font-weight: 700 !important;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+}
+
+.status-tag {
+    border-radius: 20px !important;
+    padding: 4px 12px !important;
+    font-weight: 500 !important;
+    border: none !important;
+}
+
+.profile-role {
+    font-size: 16px !important;
+    margin: 8px 0 16px 0 !important;
+    font-weight: 500 !important;
+}
+
+.light-theme .profile-role {
+    color: #64748b !important;
+}
+
+.dark-theme .profile-role {
+    color: #a0a0a0 !important;
+}
+
+.profile-meta {
+    margin-bottom: 16px;
+}
+
+.profile-meta span {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+}
+
+.light-theme .profile-meta span {
+    color: #64748b;
+}
+
+.dark-theme .profile-meta span {
+    color: #a0a0a0;
+}
+
+.profile-completion {
+    margin-top: 16px;
+}
+
+.profile-completion span {
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 8px;
+    display: block;
+}
+
+.light-theme .profile-completion span {
+    color: #2c3e50;
+}
+
+.dark-theme .profile-completion span {
+    color: #ffffff;
+}
+
+.profile-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-end;
+}
+
+.edit-profile-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    border: none !important;
+    border-radius: 8px !important;
+    height: 40px !important;
+    padding: 0 24px !important;
+    font-weight: 500 !important;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3) !important;
+    transition: all 0.3s ease !important;
+}
+
+.edit-profile-btn:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4) !important;
+}
+
+.settings-btn {
+    background: rgba(102, 126, 234, 0.1) !important;
+    border: 1px solid rgba(102, 126, 234, 0.3) !important;
+    color: #667eea !important;
+    border-radius: 8px !important;
+    height: 40px !important;
+    padding: 0 24px !important;
+    transition: all 0.3s ease !important;
+}
+
+.settings-btn:hover {
+    background: rgba(102, 126, 234, 0.2) !important;
+    border-color: #667eea !important;
+    transform: translateY(-2px) !important;
+}
+
+/* Statistics Cards */
+.stats-section {
+    margin-bottom: 24px;
+}
+
+.stat-card {
+    border-radius: 12px !important;
+    border: none !important;
+    transition: all 0.3s ease !important;
+    overflow: hidden !important;
+}
+
+.light-theme .stat-card .ant-card-body {
+    background: rgba(255, 255, 255, 0.9) !important;
+    backdrop-filter: blur(15px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+.dark-theme .stat-card .ant-card-body {
+    background: rgba(30, 30, 45, 0.9) !important;
+    backdrop-filter: blur(15px) !important;
+    border: 1px solid rgba(102, 126, 234, 0.3) !important;
+}
+
+.stat-card:hover {
+    transform: translateY(-4px) !important;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15) !important;
+}
+
+.stat-card .ant-statistic-title {
+    font-weight: 500 !important;
+    font-size: 14px !important;
+}
+
+.light-theme .stat-card .ant-statistic-title {
+    color: #64748b !important;
+}
+
+.dark-theme .stat-card .ant-statistic-title {
+    color: #a0a0a0 !important;
+}
+
+.stat-card .ant-statistic-content {
+    font-weight: 700 !important;
+    font-size: 24px !important;
+}
+
+.light-theme .stat-card .ant-statistic-content {
+    color: #2c3e50 !important;
+}
+
+.dark-theme .stat-card .ant-statistic-content {
+    color: #ffffff !important;
+}
+
+/* Main Content Card */
+.profile-content-card {
+    border-radius: 16px !important;
+    border: none !important;
+    overflow: hidden !important;
+}
+
+.light-theme .profile-content-card .ant-card-body {
+    background: rgba(255, 255, 255, 0.95) !important;
+    backdrop-filter: blur(20px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+.dark-theme .profile-content-card .ant-card-body {
+    background: rgba(30, 30, 45, 0.95) !important;
+    backdrop-filter: blur(20px) !important;
+    border: 1px solid rgba(102, 126, 234, 0.3) !important;
+}
+
+/* Tabs Styling */
+.profile-tabs .ant-tabs-tab {
+    font-weight: 500 !important;
+    font-size: 16px !important;
+    padding: 12px 24px !important;
+    transition: all 0.3s ease !important;
+}
+
+.profile-tabs .ant-tabs-tab-active {
+    background: rgba(102, 126, 234, 0.1) !important;
+    border-radius: 8px 8px 0 0 !important;
+}
+
+.profile-tabs .ant-tabs-ink-bar {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    height: 3px !important;
+    border-radius: 2px !important;
+}
+
+/* Info Cards */
+.info-card,
+.activity-card,
+.security-card,
+.security-settings-card,
+.preferences-card,
+.notification-card {
+    border-radius: 12px !important;
+    border: none !important;
+    margin-bottom: 16px !important;
+}
+
+.light-theme .info-card .ant-card-body,
+.light-theme .activity-card .ant-card-body,
+.light-theme .security-card .ant-card-body,
+.light-theme .security-settings-card .ant-card-body,
+.light-theme .preferences-card .ant-card-body,
+.light-theme .notification-card .ant-card-body {
+    background: rgba(255, 255, 255, 0.8) !important;
+    backdrop-filter: blur(10px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+}
+
+/* .dark-theme .info-card .ant-card-body,
+.dark-theme .activity-card .ant-card-body,
+.dark-theme .security-card .ant-card-body,
+.dark-theme .security-settings-card .ant-card-body,
+.dark-theme .preferences-card .ant-card-body,
+.dark-theme .notification-card .ant-card-body {
+  background: rgba(30, 30, 45, 0.8) !important;
+  backdrop-filter: blur(10px) !important;
+  border: 1px solid rgba(102, 126, */

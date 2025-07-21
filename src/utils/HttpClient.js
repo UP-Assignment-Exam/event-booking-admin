@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { API_ENDPOINT, API_TOKEN } from '../config/api';
 
 const httpClient = axios.create({
   baseURL: process.env.REACT_APP_API_ENDPOINT,
