@@ -22,6 +22,8 @@ import PaymentMethodPage from './pages/dashboard/PaymentMethods/PaymentMethodPag
 import OrganizationRequests from './pages/dashboard/Organizations/OrganizationPage';
 import ProfilePage from './pages/dashboard/Profiles/ProfilePage';
 import SettingPage from './pages/dashboard/Settings/SettingPage';
+import Notification from './pages/dashboard/Notification/Notification';
+
 
 function App() {
   return (
@@ -29,6 +31,7 @@ function App() {
       <Route element={<AdminGuard />}>
         <Route element={<AdminLayout />}>
           <Route index element={<Navigate to="/dashboard" replace />} />
+          <Route path="/notification" element={<Notification />} />
           <Route path='/preferences' element={<SettingPage />} />
           <Route path='/profile' element={<ProfilePage />} />
           <Route path='/dashboard' element={<DashboardPage />} />

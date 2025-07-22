@@ -132,6 +132,10 @@ const AdminLayout = () => {
         navigate(`/${key}`);
         console.log('Selected menu:', key);
         setSelectedKeys([key]);
+
+         if (key === 'notification') {
+        navigate('/notification');
+    }
     };
 
     const handleUserMenuClick = ({ key }) => {
@@ -143,6 +147,7 @@ const AdminLayout = () => {
             console.log('User menu action:', key);
         }
     };
+    
 
     const toggleDarkMode = (checked) => {
         setDarkMode(checked);
@@ -243,6 +248,7 @@ const AdminLayout = () => {
                                         <Button
                                             type="text"
                                             icon={<BellOutlined />}
+                                            onClick={() => navigate('/notification')}
                                             className="notification-btn"
                                         />
                                     </Badge>
