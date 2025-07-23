@@ -90,3 +90,14 @@ export function extractErrorMessage(error) {
     // Fallback string
     return "An unknown error occurred";
 }
+
+
+
+export const findParentKey = (items, selectedKey) => {
+    for (const item of items) {
+        if (item.children?.some(child => child.key === selectedKey)) {
+            return item.key;
+        }
+    }
+    return null;
+};

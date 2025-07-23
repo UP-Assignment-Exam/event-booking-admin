@@ -19,7 +19,8 @@ import DashboardPage from './pages/dashboard/Dashboards/DashboardPage';
 import TicketTypePage from './pages/dashboard/TicketTypes/TicketTypePages';
 import CategoryPage from './pages/dashboard/Categories/CategoryPage';
 import PaymentMethodPage from './pages/dashboard/PaymentMethods/PaymentMethodPage';
-import OrganizationRequests from './pages/dashboard/Organizations/OrganizationPage';
+import OrganizationRequestPage from './pages/dashboard/Organizations/OrganizationRequestPage';
+import OrganizationPage from './pages/dashboard/Organizations/OrganizationPage';
 import ProfilePage from './pages/dashboard/Profiles/ProfilePage';
 import SettingPage from './pages/dashboard/Settings/SettingPage';
 import Notification from './pages/dashboard/Notification/Notification';
@@ -36,7 +37,8 @@ function App() {
           <Route path='/profile' element={<ProfilePage />} />
           <Route path='/dashboard' element={<DashboardPage />} />
           <Route path='/payment-methods' element={<PaymentMethodPage />} />
-          <Route path='/organizations' element={<OrganizationRequests />} />
+          <Route path='/organizations' element={<OrganizationPage />} />
+          <Route path='/request-organizations' element={<OrganizationRequestPage />} />
           <Route path='/ticket-types' element={<TicketTypePage />} />
           <Route path='/categories' element={<CategoryPage />} />
           <Route path='/rights' index element={<RightPermissionPage />} />

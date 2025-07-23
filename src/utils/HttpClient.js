@@ -1,10 +1,13 @@
 import axios from 'axios';
 
+const token = localStorage.getItem('token'); // Replace with your actual key
+
 const httpClient = axios.create({
   baseURL: process.env.REACT_APP_API_ENDPOINT,
   withCredentials: true,
   headers: {
-    "x-api-token": process.env.REACT_APP_API_TOKEN
+    "x-api-token": process.env.REACT_APP_API_TOKEN,
+    ...(token && { Authorization: token }) // Add token if available
   },
 });
 

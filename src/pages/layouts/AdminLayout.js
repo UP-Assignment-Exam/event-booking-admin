@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
     Layout,
     Menu,
@@ -25,39 +25,17 @@ import {
 } from '@ant-design/icons';
 import { TiTicket } from 'react-icons/ti';
 import "./AdminLayout.css"; // Assuming you have a CSS file for styles
-import { Outlet, useNavigate } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { toggleTheme } from '../../global/slices/ThemeSlice';
 import { AiOutlineBank } from 'react-icons/ai';
+import { findParentKey } from '../../utils/Utils';
 
 const { Header, Sider, Content } = Layout;
 
 const AdminLayout = () => {
-    const { user } = useSelector((state) => state.auth);
-    const navigate = useNavigate();
-    const dispatch = useDispatch();
-    const isDarkMode = useSelector((state) => state.theme.isDarkMode);
-    const [collapsed, setCollapsed] = useState(false);
-    const [selectedKeys, setSelectedKeys] = useState(['dashboard']);
-
-    // Enhanced dark mode state with system preference detection
-    const [darkMode, setDarkMode] = useState(() => {
-        const saved = localStorage.getItem('userTheme');
-        if (saved) return saved === 'dark';
-
-        // Check system preference
-        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-            return true;
-        }
-        return false;
-    });
-
-    useEffect(() => {
-        setDarkMode(isDarkMode);
-    }, [isDarkMode])
-
     // Menu items configuration
-    const menuItems = [
+    const menuItems = useMemo(() => [
         {
             key: 'dashboard',
             icon: <DashboardOutlined />,
@@ -99,11 +77,57 @@ const AdminLayout = () => {
             ]
         },
         {
-            key: 'organizations',
+            key: 'organization-management',
             icon: <BankOutlined />,
-            label: 'Organizations',
+            label: 'Associates',
+            children: [
+                { key: 'organizations', label: 'Organizations' },
+                { key: 'request-organizations', label: 'Requests' },
+            ]
         },
-    ];
+    ], []);
+
+    const { user } = useSelector((state) => state.auth);
+    const location = useLocation();
+    const navigate = useNavigate();
+    const dispatch = useDispatch();
+    const isDarkMode = useSelector((state) => state.theme.isDarkMode);
+    const [collapsed, setCollapsed] = useState(false);
+    const [selectedKeys, setSelectedKeys] = useState([location?.pathname?.split("/")?.[1] || "dashboard"]);
+    const [openKeys, setOpenKeys] = useState(() => {
+        const initSelectedKeys = [location?.pathname?.split("/")?.[1] || "dashboard"];
+        if (initSelectedKeys.length > 0) {
+            const parentKey = findParentKey(menuItems, selectedKeys[0]);
+            if (parentKey) return [parentKey];
+        }
+
+        return []
+    });
+
+    // Dynamically update openKeys based on selectedKeys
+    useEffect(() => {
+        if (selectedKeys.length > 0) {
+            const parentKey = findParentKey(menuItems, selectedKeys[0]);
+            if (parentKey) setOpenKeys([parentKey]);
+        }
+    }, [selectedKeys, menuItems]);
+
+
+    // Enhanced dark mode state with system preference detection
+    const [darkMode, setDarkMode] = useState(() => {
+        const saved = localStorage.getItem('userTheme');
+        if (saved) return saved === 'dark';
+
+        // Check system preference
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            return true;
+        }
+        return false;
+    });
+
+    useEffect(() => {
+        setDarkMode(isDarkMode);
+    }, [isDarkMode])
 
     // User dropdown menu
     const userMenuItems = [
@@ -211,6 +235,8 @@ const AdminLayout = () => {
                             selectedKeys={selectedKeys}
                             onClick={handleMenuClick}
                             items={menuItems}
+                            openKeys={openKeys}
+                            onOpenChange={(keys) => setOpenKeys(keys)}
                             style={{
                                 border: 'none',
                                 background: 'transparent'

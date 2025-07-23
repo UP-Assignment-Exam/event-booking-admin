@@ -39,6 +39,7 @@ export default function LoginPage() {
       setLoading(false);
     }
   }
+  
   return (
     <div className="p-4 login-form">
       {/* Logo and Title */}
