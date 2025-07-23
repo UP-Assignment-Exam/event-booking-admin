@@ -12,6 +12,8 @@ export const ORGANIZATIONS_URL = "/organizations";
 export const UPDATE_ORGANIZATIONS_URL = "/organizations/:id";
 export const ORGANIZATIONS_STATIC_URL = "/organizations/static";
 
+export const RIGHT_PERMISSIONS_URL = "/rights/permissions";
+
 export const BASE_URL = "/assets/images";
 export const BASE_FILE_URL = "/assets/files";
 
