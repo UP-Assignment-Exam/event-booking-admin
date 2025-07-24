@@ -1,16 +1,11 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
     Table,
     Button,
-    Modal,
-    Form,
-    Input,
     Space,
     Popconfirm,
     message,
     Card,
-    Row,
-    Col,
     Tag,
     Tooltip,
     Avatar,
@@ -21,14 +16,25 @@ import {
     EditOutlined,
     DeleteOutlined,
     EyeOutlined,
-    FileTextOutlined
 } from '@ant-design/icons';
 import { TiTicket } from 'react-icons/ti';
 import dayjs from 'dayjs';
+import ToggleEventTicketModal from './components/modals/ToggleEventTicketModal';
+import httpClient from '../../../utils/HttpClient';
+import { TICKET_TYPES_URL } from '../../../constants/Url';
+import { debounce } from 'lodash';
 
-const { TextArea } = Input;
 
 const TicketTypePage = () => {
+    const defaultFilter = useMemo(() => {
+        return {
+            pageNo: 1,
+            pageSize: 10,
+        }
+    }, [])
+    const [loading, setLoading] = useState(false);
+    const [filter, setFilter] = useState(defaultFilter)
+    const [total, setTotal] = useState(0);
     const [ticketTypes, setTicketTypes] = useState([
         {
             id: 1,
@@ -60,65 +66,54 @@ const TicketTypePage = () => {
         }
     ]);
 
-    const [isModalVisible, setIsModalVisible] = useState(false);
-    const [currentTicketType, setCurrentTicketType] = useState(null);
-    const [form] = Form.useForm();
+    const toggleEventTicketModalRef = useRef(null);
 
-    const showModal = (ticketType = null) => {
-        setCurrentTicketType(ticketType);
-        setIsModalVisible(true);
+    const showModal = (ticketType = null, mode) => {
         if (ticketType) {
-            form.setFieldsValue({
-                title: ticketType.title,
-                description: ticketType.description
-            });
+            toggleEventTicketModalRef.current?.openModal(ticketType, mode);
         } else {
-            form.resetFields();
+            toggleEventTicketModalRef.current?.openModal({}, mode);
         }
     };
 
-    const handleSubmit = async () => {
-        try {
-            const values = await form.validateFields();
-            const currentTime = dayjs().tz('Asia/Phnom_Penh').format();
-
-            if (currentTicketType) {
-                // Update existing ticket type
-                setTicketTypes(prev => prev.map(type =>
-                    type.id === currentTicketType.id
-                        ? { ...type, ...values, updatedAt: currentTime }
-                        : type
-                ));
-                message.success('Ticket type updated successfully!');
-            } else {
-                // Create new ticket type
-                const newTicketType = {
-                    id: Date.now(),
-                    ...values,
-                    createdAt: currentTime,
-                    updatedAt: null
-                };
-                setTicketTypes(prev => [...prev, newTicketType]);
-                message.success('Ticket type created successfully!');
-            }
-
-            setIsModalVisible(false);
-            form.resetFields();
-            setCurrentTicketType(null);
-        } catch (error) {
-            message.error('Please fill in all required fields');
-        }
-    };
-
-    const handleDelete = (id) => {
-        setTicketTypes(prev => prev.filter(type => type.id !== id));
-        message.success('Ticket type deleted successfully!');
-    };
+    // const handleDelete = (id) => {
+    //     setTicketTypes(prev => prev.filter(type => type.id !== id));
+    //     message.success('Ticket type deleted successfully!');
+    // };
 
     const formatDate = (dateString) => {
         if (!dateString) return 'Never';
         return dayjs(dateString).tz('Asia/Phnom_Penh').format('MMM DD, YYYY HH:mm');
     };
+
+    const fetchData = useCallback(async () => {
+        try {
+            setLoading(true);
+
+            const res = await httpClient.get(TICKET_TYPES_URL).then(res => res.data); // Simulate fetching data from API
+
+            if (res.status === 200) {
+                setTicketTypes(res.data);
+                setTotal(res.total)
+            } else {
+                setTicketTypes([]);
+                setTotal(0)
+            }
+        } catch (error) {
+            setTicketTypes([]);
+            setTotal(0)
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    const debounceFetchData = useCallback(debounce(fetchData, 300), [fetchData])
+
+    useEffect(() => {
+        debounceFetchData()
+
+        return debounceFetchData.cancel
+    }, [debounceFetchData])
 
     const columns = [
         {
@@ -137,7 +132,7 @@ const TicketTypePage = () => {
                     <div>
                         <div style={{ fontWeight: 600, fontSize: '14px' }}>{text}</div>
                         <div style={{ fontSize: '12px', color: '#64748b' }}>
-                            ID: <Tag size="small">#{record.id}</Tag>
+                            ID: <Tag size="small">#{record._id}</Tag>
                         </div>
                     </div>
                 </div>
@@ -189,7 +184,7 @@ const TicketTypePage = () => {
                         <Button
                             type="text"
                             icon={<EyeOutlined />}
-                            onClick={() => showModal(record)}
+                            onClick={() => showModal(record, 'view')}
                             style={{ color: '#667eea' }}
                         />
                     </Tooltip>
@@ -197,11 +192,11 @@ const TicketTypePage = () => {
                         <Button
                             type="text"
                             icon={<EditOutlined />}
-                            onClick={() => showModal(record)}
+                            onClick={() => showModal(record, 'edit')}
                             style={{ color: '#52c41a' }}
                         />
                     </Tooltip>
-                    <Popconfirm
+                    {/* <Popconfirm
                         title="Delete Ticket Type"
                         description="Are you sure you want to delete this ticket type?"
                         onConfirm={() => handleDelete(record.id)}
@@ -215,77 +210,11 @@ const TicketTypePage = () => {
                                 style={{ color: '#ff4d4f' }}
                             />
                         </Tooltip>
-                    </Popconfirm>
+                    </Popconfirm> */}
                 </Space>
             ),
         },
     ];
-
-    const renderTicketTypeModal = () => (
-        <Modal
-            title={
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <TiTicket style={{ color: '#667eea' }} />
-                    {currentTicketType ? 'Edit Ticket Type' : 'Create New Ticket Type'}
-                </div>
-            }
-            open={isModalVisible}
-            onOk={handleSubmit}
-            onCancel={() => {
-                setIsModalVisible(false);
-                form.resetFields();
-                setCurrentTicketType(null);
-            }}
-            width={600}
-            okText={currentTicketType ? 'Update Ticket Type' : 'Create Ticket Type'}
-            okButtonProps={{
-                style: {
-                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                    border: 'none'
-                }
-            }}
-        >
-            <Form
-                form={form}
-                layout="vertical"
-                initialValues={{}}
-            >
-                <Form.Item
-                    name="title"
-                    label="Ticket Type Title"
-                    rules={[
-                        { required: true, message: 'Please enter ticket type title' },
-                        { min: 3, message: 'Title must be at least 3 characters' },
-                        { max: 100, message: 'Title cannot exceed 100 characters' }
-                    ]}
-                >
-                    <Input
-                        placeholder="Enter ticket type title"
-                        prefix={<FileTextOutlined />}
-                        showCount
-                        maxLength={100}
-                    />
-                </Form.Item>
-
-                <Form.Item
-                    name="description"
-                    label="Description"
-                    rules={[
-                        { required: true, message: 'Please enter description' },
-                        { min: 10, message: 'Description must be at least 10 characters' },
-                        { max: 500, message: 'Description cannot exceed 500 characters' }
-                    ]}
-                >
-                    <TextArea
-                        rows={4}
-                        placeholder="Describe the ticket type and its features"
-                        showCount
-                        maxLength={500}
-                    />
-                </Form.Item>
-            </Form>
-        </Modal>
-    );
 
     return (
         <div style={{ padding: '0' }}>
@@ -305,7 +234,7 @@ const TicketTypePage = () => {
                     <Button
                         type="primary"
                         icon={<PlusOutlined />}
-                        onClick={() => showModal()}
+                        onClick={() => showModal({}, "create")}
                         style={{
                             background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                             border: 'none',
@@ -319,7 +248,7 @@ const TicketTypePage = () => {
                 <Card>
                     <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <Badge
-                            count={ticketTypes.length}
+                            count={total}
                             style={{ backgroundColor: '#667eea' }}
                             showZero
                         >
@@ -330,18 +259,36 @@ const TicketTypePage = () => {
                     <Table
                         columns={columns}
                         dataSource={ticketTypes}
+                        loading={loading}
                         rowKey="id"
                         pagination={{
-                            pageSize: 10,
+                            pageSize: filter.pageSize,
+                            current: filter.pageNo,
                             showSizeChanger: true,
                             showQuickJumper: true,
+                            total: total,
+                            onChange: (page, pageSize) => {
+                                // Fetch data for the selected page
+                                setFilter(pre => {
+                                    debounceFetchData({ ...pre, pageNo: page, pageSize });
+                                    return ({ ...pre, pageNo: page, pageSize })
+                                });
+                            },
                             showTotal: (total, range) =>
                                 `${range[0]}-${range[1]} of ${total} ticket types`,
                         }}
                     />
                 </Card>
             </div>
-            {renderTicketTypeModal()}
+
+            <ToggleEventTicketModal
+                ref={toggleEventTicketModalRef}
+                fetchData={async () => {
+                    await Promise.all([
+                        debounceFetchData()
+                    ])
+                }}
+            />
         </div>
     );
 };

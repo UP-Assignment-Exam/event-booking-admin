@@ -14,6 +14,11 @@ export const ORGANIZATIONS_STATIC_URL = "/organizations/static";
 
 export const RIGHT_PERMISSIONS_URL = "/rights/permissions";
 
+export const TICKET_TYPES_URL = "/ticket-types";
+export const CREATE_TICKET_TYPES_URL = "/ticket-types";
+export const UPDATE_TICKET_TYPES_URL = "/ticket-types/:id";
+export const DELETE_TICKET_TYPES_URL = "/ticket-types/:id";
+
 export const BASE_URL = "/assets/images";
 export const BASE_FILE_URL = "/assets/files";
 
