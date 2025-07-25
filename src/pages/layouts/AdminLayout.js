@@ -21,7 +21,8 @@ import {
     SettingOutlined,
     LogoutOutlined,
     MoonOutlined,
-    SunOutlined
+    SunOutlined,
+    DiscordOutlined
 } from '@ant-design/icons';
 import { TiTicket } from 'react-icons/ti';
 import "./AdminLayout.css"; // Assuming you have a CSS file for styles
@@ -103,6 +104,12 @@ const AdminLayout = () => {
             icon: <BankOutlined />,
             label: 'Organizations',
         },
+        {
+            key: 'promocodes',
+            icon: <DiscordOutlined />,
+            label: 'Promocodes'
+
+        }
     ];
 
     // User dropdown menu
