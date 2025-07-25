@@ -21,7 +21,6 @@ function ToggleEventTicketModal(props, ref) {
     const [mode, setMode] = useState('create'); // 'create' or 'edit' or 'view'
     const [loading, setLoading] = useState(false);
 
-    console.log("mode =", mode)
     const handleFinishForm = async (data) => {
         try {
             setLoading(true);

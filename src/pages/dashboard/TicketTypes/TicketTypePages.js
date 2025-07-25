@@ -32,7 +32,7 @@ const TicketTypePage = () => {
             pageSize: 10,
         }
     }, [])
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState(defaultFilter)
     const [total, setTotal] = useState(0);
     const [ticketTypes, setTicketTypes] = useState([

@@ -19,6 +19,11 @@ export const CREATE_TICKET_TYPES_URL = "/ticket-types";
 export const UPDATE_TICKET_TYPES_URL = "/ticket-types/:id";
 export const DELETE_TICKET_TYPES_URL = "/ticket-types/:id";
 
+export const CATEGORIES_URL = "/categories";
+export const CREATE_CATEGORIES_URL = "/categories";
+export const UPDATE_CATEGORIES_URL = "/categories/:id";
+export const DELETE_CATEGORIES_URL = "/categories/:id";
+
 export const BASE_URL = "/assets/images";
 export const BASE_FILE_URL = "/assets/files";
 

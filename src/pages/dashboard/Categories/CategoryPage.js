@@ -1,9 +1,7 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
     Table,
     Button,
-    Modal,
-    Form,
     Input,
     Space,
     Popconfirm,
@@ -13,22 +11,30 @@ import {
     Tooltip,
     Avatar,
     Badge,
-    ColorPicker
 } from 'antd';
 import {
     PlusOutlined,
     EditOutlined,
     DeleteOutlined,
     EyeOutlined,
-    FileTextOutlined,
-    LinkOutlined,
 } from '@ant-design/icons';
 import { MdCategory } from 'react-icons/md';
 import dayjs from 'dayjs';
-
-const { TextArea } = Input;
+import ToggleCategoryModal from './components/modals/ToggleCategoryModal';
+import { debounce } from 'lodash';
+import { CATEGORIES_URL, DELETE_CATEGORIES_URL } from '../../../constants/Url';
+import httpClient from '../../../utils/HttpClient';
 
 const CategoryPage = () => {
+    const defaultFilter = useMemo(() => {
+        return {
+            pageNo: 1,
+            pageSize: 10,
+        }
+    }, [])
+    const [loading, setLoading] = useState(true);
+    const [filter, setFilter] = useState(defaultFilter)
+    const [total, setTotal] = useState(0);
     const [categories, setCategories] = useState([
         {
             id: 1,
@@ -68,67 +74,68 @@ const CategoryPage = () => {
         }
     ]);
 
-    const [isModalVisible, setIsModalVisible] = useState(false);
-    const [currentCategory, setCurrentCategory] = useState(null);
-    const [form] = Form.useForm();
+    const toggleCategoriesModalRef = useRef(null);
 
-    const showModal = (category = null) => {
-        setCurrentCategory(category);
-        setIsModalVisible(true);
+    const showModal = (category = null, mode) => {
         if (category) {
-            form.setFieldsValue({
-                title: category.title,
-                description: category.description,
-                iconUrl: category.iconUrl,
-                color: category.color
-            });
+            toggleCategoriesModalRef.current?.openModal(category, mode);
         } else {
-            form.resetFields();
+            toggleCategoriesModalRef.current?.openModal({}, mode);
         }
     };
 
-    const handleSubmit = async () => {
+    const handleDelete = async (id) => {
         try {
-            const values = await form.validateFields();
-            const currentTime = dayjs().tz('Asia/Phnom_Penh').format();
+            setLoading(true);
+            const res = await httpClient.delete(DELETE_CATEGORIES_URL.replace(":id", id)).then(res => res.data)
 
-            if (currentCategory) {
-                // Update existing category
-                setCategories(prev => prev.map(cat =>
-                    cat.id === currentCategory.id
-                        ? { ...cat, ...values, updatedAt: currentTime }
-                        : cat
-                ));
-                message.success('Category updated successfully!');
+            if (res.status === 200) {
+                debounceFetchData()
+                message.success("Successfully deleted Category.");
             } else {
-                // Create new category
-                const newCategory = {
-                    id: Date.now(),
-                    ...values,
-                    createdAt: currentTime,
-                    updatedAt: null
-                };
-                setCategories(prev => [...prev, newCategory]);
-                message.success('Category created successfully!');
+                message.success("Failed to delete categories");
+                setLoading(false);
             }
-
-            setIsModalVisible(false);
-            form.resetFields();
-            setCurrentCategory(null);
         } catch (error) {
-            message.error('Please fill in all required fields');
+            setLoading(false);
+            message.error("Failed to delete categories")
         }
-    };
-
-    const handleDelete = (id) => {
-        setCategories(prev => prev.filter(cat => cat.id !== id));
-        message.success('Category deleted successfully!');
     };
 
     const formatDate = (dateString) => {
         if (!dateString) return 'Never';
         return dayjs(dateString).tz('Asia/Phnom_Penh').format('MMM DD, YYYY HH:mm');
     };
+
+    const fetchData = useCallback(async () => {
+        try {
+            setLoading(true);
+
+            const res = await httpClient.get(CATEGORIES_URL).then(res => res.data); // Simulate fetching data from API
+
+            if (res.status === 200) {
+                setCategories(res.data);
+                setTotal(res.total)
+            } else {
+                setCategories([]);
+                setTotal(0)
+            }
+        } catch (error) {
+            setCategories([]);
+            setTotal(0)
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    const debounceFetchData = useCallback(debounce(fetchData, 300), [fetchData])
+
+    useEffect(() => {
+        debounceFetchData()
+
+        return debounceFetchData.cancel
+    }, [debounceFetchData])
+
 
     const columns = [
         {
@@ -170,11 +177,11 @@ const CategoryPage = () => {
             key: 'color',
             render: (color) => (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <div 
-                        style={{ 
-                            width: '20px', 
-                            height: '20px', 
-                            borderRadius: '4px', 
+                    <div
+                        style={{
+                            width: '20px',
+                            height: '20px',
+                            borderRadius: '4px',
                             backgroundColor: color,
                             border: '1px solid #d9d9d9'
                         }}
@@ -231,7 +238,7 @@ const CategoryPage = () => {
                         <Button
                             type="text"
                             icon={<EyeOutlined />}
-                            onClick={() => showModal(record)}
+                            onClick={() => showModal(record, "view")}
                             style={{ color: '#667eea' }}
                         />
                     </Tooltip>
@@ -239,14 +246,14 @@ const CategoryPage = () => {
                         <Button
                             type="text"
                             icon={<EditOutlined />}
-                            onClick={() => showModal(record)}
+                            onClick={() => showModal(record, "edit")}
                             style={{ color: '#52c41a' }}
                         />
                     </Tooltip>
                     <Popconfirm
                         title="Delete Category"
                         description="Are you sure you want to delete this category?"
-                        onConfirm={() => handleDelete(record.id)}
+                        onConfirm={() => handleDelete(record._id)}
                         okText="Yes"
                         cancelText="No"
                     >
@@ -262,107 +269,6 @@ const CategoryPage = () => {
             ),
         },
     ];
-
-    const renderCategoryModal = () => (
-        <Modal
-            title={
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <MdCategory style={{ color: '#667eea' }} />
-                    {currentCategory ? 'Edit Category' : 'Create New Category'}
-                </div>
-            }
-            open={isModalVisible}
-            onOk={handleSubmit}
-            onCancel={() => {
-                setIsModalVisible(false);
-                form.resetFields();
-                setCurrentCategory(null);
-            }}
-            width={600}
-            okText={currentCategory ? 'Update Category' : 'Create Category'}
-            okButtonProps={{
-                style: {
-                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                    border: 'none'
-                }
-            }}
-        >
-            <Form
-                form={form}
-                layout="vertical"
-                initialValues={{}}
-            >
-                <Form.Item
-                    name="title"
-                    label="Category Title"
-                    rules={[
-                        { required: true, message: 'Please enter category title' },
-                        { min: 3, message: 'Title must be at least 3 characters' },
-                        { max: 50, message: 'Title cannot exceed 50 characters' }
-                    ]}
-                >
-                    <Input 
-                        placeholder="Enter category title" 
-                        prefix={<FileTextOutlined />}
-                        showCount
-                        maxLength={50}
-                    />
-                </Form.Item>
-
-                <Form.Item
-                    name="description"
-                    label="Description"
-                    rules={[
-                        { required: true, message: 'Please enter description' },
-                        { min: 10, message: 'Description must be at least 10 characters' },
-                        { max: 200, message: 'Description cannot exceed 200 characters' }
-                    ]}
-                >
-                    <TextArea 
-                        rows={3} 
-                        placeholder="Describe the category and its purpose"
-                        showCount
-                        maxLength={200}
-                    />
-                </Form.Item>
-
-                <Form.Item
-                    name="iconUrl"
-                    label="Icon URL"
-                    rules={[
-                        { required: true, message: 'Please enter icon URL' },
-                        { type: 'url', message: 'Please enter a valid URL' }
-                    ]}
-                >
-                    <Input 
-                        placeholder="https://example.com/icon.svg" 
-                        prefix={<LinkOutlined />}
-                    />
-                </Form.Item>
-
-                <Form.Item
-                    name="color"
-                    label="Category Color"
-                    rules={[
-                        { required: true, message: 'Please select a color' }
-                    ]}
-                >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <ColorPicker 
-                            format="hex"
-                            showText
-                            onChange={(color) => {
-                                form.setFieldsValue({ color: color.toHexString() });
-                            }}
-                        />
-                        <span style={{ fontSize: '12px', color: '#64748b' }}>
-                            Click to choose a color for this category
-                        </span>
-                    </div>
-                </Form.Item>
-                </Form>
-        </Modal>
-    );
 
     return (
         <div style={{ padding: '0' }}>
@@ -382,7 +288,7 @@ const CategoryPage = () => {
                     <Button
                         type="primary"
                         icon={<PlusOutlined />}
-                        onClick={() => showModal()}
+                        onClick={() => showModal({}, "create")}
                         style={{
                             background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                             border: 'none',
@@ -403,22 +309,39 @@ const CategoryPage = () => {
                             <span style={{ marginRight: '8px', fontWeight: 500 }}>Total Categories</span>
                         </Badge>
                     </div>
-                    
+
                     <Table
+                        loading={loading}
                         columns={columns}
                         dataSource={categories}
                         rowKey="id"
                         pagination={{
-                            pageSize: 10,
+                            pageSize: filter.pageSize,
+                            current: filter.pageNo,
                             showSizeChanger: true,
                             showQuickJumper: true,
+                            total: total,
+                            onChange: (page, pageSize) => {
+                                // Fetch data for the selected page
+                                setFilter(pre => {
+                                    debounceFetchData({ ...pre, pageNo: page, pageSize });
+                                    return ({ ...pre, pageNo: page, pageSize })
+                                });
+                            },
                             showTotal: (total, range) =>
                                 `${range[0]}-${range[1]} of ${total} categories`,
                         }}
                     />
                 </Card>
             </div>
-            {renderCategoryModal()}
+            <ToggleCategoryModal
+                ref={toggleCategoriesModalRef}
+                fetchData={async () => {
+                    await Promise.all([
+                        debounceFetchData()
+                    ])
+                }}
+            />
         </div>
     );
 };
