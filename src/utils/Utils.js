@@ -90,3 +90,26 @@ export function extractErrorMessage(error) {
     // Fallback string
     return "An unknown error occurred";
 }
+
+
+
+export const findParentKey = (items, selectedKey) => {
+    for (const item of items) {
+        if (item.children?.some(child => child.key === selectedKey)) {
+            return item.key;
+        }
+    }
+    return null;
+};
+
+export function groupRightsByCategory(rights) {
+    const grouped = _.groupBy(rights, 'group');
+
+    const result = _.map(grouped, (permissions, group) => ({
+        category: group,
+        permissions: permissions.map(({ _id, name }) => ({ _id, name }))
+    }));
+    
+  // Sort the result: larger groups first
+  return _.orderBy(result, group => group.permissions.length, 'desc');
+}
