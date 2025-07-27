@@ -24,6 +24,7 @@ import OrganizationPage from './pages/dashboard/Organizations/OrganizationPage';
 import ProfilePage from './pages/dashboard/Profiles/ProfilePage';
 import SettingPage from './pages/dashboard/Settings/SettingPage';
 import Notification from './pages/dashboard/Notification/Notification';
+import PromocodePage from './pages/dashboard/Promocodes/PromocodePage';
 
 
 function App() {
@@ -45,6 +46,7 @@ function App() {
           <Route path='/roles' index element={<RolesPermissionsPage />} />
           <Route path='/Event' index element={<Event />} />
           <Route path='/Customer' index element={<Customer />} />
+          <Route path='/promocodes' element={<PromocodePage/>}/>
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Route>

@@ -21,7 +21,8 @@ import {
     SettingOutlined,
     LogoutOutlined,
     MoonOutlined,
-    SunOutlined
+    SunOutlined,
+    DiscordOutlined
 } from '@ant-design/icons';
 import { TiTicket } from 'react-icons/ti';
 import "./AdminLayout.css"; // Assuming you have a CSS file for styles
@@ -85,6 +86,11 @@ const AdminLayout = () => {
                 { key: 'request-organizations', label: 'Requests' },
             ]
         },
+        {
+            key: 'promocodes',
+            icon: <DiscordOutlined/>,
+            label: 'Promocodes'
+        }
     ], []);
 
     const { user } = useSelector((state) => state.auth);
