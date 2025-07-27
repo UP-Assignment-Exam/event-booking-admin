@@ -264,18 +264,21 @@ const PaymentMethodPage = () => {
 
     const handleDelete = async (id) => {
         try {
-            setLoading(true);
+            setLoading(pre => ({ ...pre, static: true, list: true }));
             const res = await httpClient.delete(DELETE_PAYMENT_METHODS_URL.replace(":id", id)).then(res => res.data)
 
             if (res.status === 200) {
-                debounceFetchData()
+                await Promise.all([
+                    debounceFetchData(),
+                    debounceFetchStatic()
+                ])
                 message.success('Payment method deleted successfully');
             } else {
                 message.success("Failed to delete payment method");
-                setLoading(false);
+                setLoading(pre => ({ ...pre, static: false, list: false }));
             }
         } catch (error) {
-            setLoading(false);
+            setLoading(pre => ({ ...pre, static: false, list: false }));
             message.error("Failed to delete payment method")
         }
     };

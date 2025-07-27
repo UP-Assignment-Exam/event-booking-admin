@@ -39,6 +39,13 @@ export const UPDATE_STATUS_PAYMENT_METHODS_URL = "/payment-methods/status/:id";
 export const DELETE_PAYMENT_METHODS_URL = "/payment-methods/:id";
 export const PAYMENT_METHODS_STATIC_URL = "/payment-methods/static";
 
+export const PROMO_STATIC_URL = "/promo-codes/static";
+export const PROMO_URL = "/promo-codes";
+export const CREATE_PROMO_URL = "/promo-codes";
+export const UPDATE_PROMO_URL = "/promo-codes/:id";
+export const DELETE_PROMO_URL = "/promo-codes/:id";
+export const DELETE_EXPIRED_PROMO_URL = "/promo-codes/expired";
+
 export const BASE_URL = "/assets/images";
 export const BASE_FILE_URL = "/assets/files";
 

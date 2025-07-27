@@ -17,8 +17,6 @@ import {
     EditOutlined,
     DeleteOutlined,
     EyeOutlined,
-    CrownOutlined,
-    SafetyOutlined
 } from '@ant-design/icons';
 import { GoShieldCheck } from 'react-icons/go';
 import ToggleRolePermissionModal from './components/modals/ToggleRolePermissionModal';

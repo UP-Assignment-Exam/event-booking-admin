@@ -48,20 +48,18 @@ import {
 } from '@ant-design/icons';
 import { debounce } from 'lodash';
 import httpClient from '../../../utils/HttpClient';
-import { ORGANIZATION_REQUESTS_STATIC_URL, ORGANIZATION_REQUESTS_URL, ORGANIZATIONS_STATIC_URL, ORGANIZATIONS_URL, UPDATE_ORGANIZATION_REQUESTS_URL, UPDATE_ORGANIZATIONS_URL } from '../../../constants/Url';
+import { ORGANIZATIONS_STATIC_URL, ORGANIZATIONS_URL } from '../../../constants/Url';
 import dayjs from 'dayjs';
 import { objectToQuery } from '../../../utils/Utils';
-import RejectOrganizationModal from './components/modals/RejectOrganizationModal';
 import ViewOrganizationDetailModal from './components/modals/ViewOrganizationDetailModal';
 import ManageOrganizationStatusModal from './components/modals/ManageOrganizationStatusModal';
 
-const { Title, Text, Paragraph } = Typography;
+const { Text } = Typography;
 const { Option } = Select;
-const { TextArea } = Input;
 
 const OrganizationRequestPage = () => {
     const defaultStatic = useMemo(() => {
-        return { pending: 0, approved: 0, rejected: 0 }
+        return { total: 0, pending: 0, approved: 0, rejected: 0 }
     }, [])
     const defaultFilter = useMemo(() => {
         return {
@@ -74,7 +72,7 @@ const OrganizationRequestPage = () => {
     }, [])
     const [filter, setFilter] = useState(defaultFilter)
     const [dataSource, setDataSource] = useState({ data: [], total: 0 });
-    const [statistic, setStatistic] = useState({ total: 0, pending: 0, approved: 0, rejected: 0 });
+    const [statistic, setStatistic] = useState(defaultStatic);
     const [loading, setLoading] = useState({
         list: true,
         static: true,
@@ -333,7 +331,6 @@ const OrganizationRequestPage = () => {
                             value={filter.keyword}
                             onChange={(e) => {
                                 setFilter(pre => ({ ...pre, keyword: e.target.value, pageNo: 1 }));
-                                // setSearchText(e.target.value)
                             }}
                             style={{ width: 250 }}
                         />

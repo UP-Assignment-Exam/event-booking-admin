@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Card,
   List,
@@ -20,7 +20,9 @@ import {
   Tooltip,
   Avatar,
   Progress,
-  Descriptions
+  Descriptions,
+  Popconfirm,
+  Spin
 } from 'antd';
 import {
   GiftOutlined,
@@ -38,6 +40,12 @@ import {
   PlusOutlined,
   ShareAltOutlined
 } from '@ant-design/icons';
+import TogglePromoCodeModal from './components/modals/TogglePromoCodeModal';
+import { debounce } from 'lodash';
+import httpClient from '../../../utils/HttpClient';
+import { objectToQuery } from '../../../utils/Utils';
+import { DELETE_EXPIRED_PROMO_URL, DELETE_PROMO_URL, PROMO_STATIC_URL, PROMO_URL } from '../../../constants/Url';
+import ViewPromoCodeModal from './components/modals/ViewPromoCodeModal';
 
 const { Title, Text, Paragraph } = Typography;
 const { Search } = Input;
@@ -169,32 +177,107 @@ const mockPromoCodes = [
 ];
 
 export default function PromocodePage() {
+  const defaultStatic = useMemo(() => {
+    return { total: 0, active: 0, expired: 0, expiringSoon: 0 }
+  }, [])
+  const defaultFilter = useMemo(() => {
+    return {
+      pageNo: 1,
+      pageSize: 10,
+      status: "all",
+      discountType: "all",
+      tab: "all",
+      keyword: "",
+    }
+  }, [])
   const [promoCodes, setPromoCodes] = useState(mockPromoCodes);
-  const [selectedPromoCode, setSelectedPromoCode] = useState(null);
+  const [statistic, setStatistic] = useState(defaultStatic);
   const [copiedCode, setCopiedCode] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all');
-  const [filterCategory, setFilterCategory] = useState('all');
-  const [activeTab, setActiveTab] = useState('all');
+  const [loading, setLoading] = useState({
+    list: true,
+    static: true,
+  });
+  const [filter, setFilter] = useState(defaultFilter)
+  const [total, setTotal] = useState(0);
 
-  // Get promo code statistics
-  const promoStats = {
-    total: promoCodes.length,
-    active: promoCodes.filter(p => p.status === 'active').length,
-    expired: promoCodes.filter(p => p.status === 'expired').length,
-    nearExpiry: promoCodes.filter(p => {
-      const endDate = new Date(p.endDate);
-      const now = new Date();
-      const diffDays = Math.ceil((endDate - now) / (1000 * 60 * 60 * 24));
-      return diffDays <= 7 && diffDays > 0;
-    }).length
-  };
+  const togglePromoCodeModalRef = useRef();
+  const viewPromoCodeModalRef = useRef();
 
-  // Get discount icon based on type
-  const getDiscountIcon = (type) => {
-    return type === 'percentage' ?
-      <PercentageOutlined style={{ color: '#52c41a' }} /> :
-      <DollarOutlined style={{ color: '#1890ff' }} />;
+  const fetchData = useCallback(async (parseQuery) => {
+    try {
+      setLoading((pre) => ({ ...pre, list: true }));
+
+      const res = await httpClient.get(objectToQuery(PROMO_URL, parseQuery ?? filter)).then(res => res.data); // Simulate fetching data from API
+
+      if (res.status === 200) {
+        setPromoCodes(res.data);
+        setTotal(res.total)
+      } else {
+        setPromoCodes([]);
+        setTotal(0)
+      }
+    } catch (error) {
+      setPromoCodes([]);
+      setTotal(0)
+    } finally {
+      setLoading((pre) => ({ ...pre, list: false }));
+    }
+  }, [filter]);
+
+  const debounceFetchData = useCallback(debounce(fetchData, 300), [fetchData])
+
+  useEffect(() => {
+    debounceFetchData()
+
+    return debounceFetchData.cancel
+  }, [debounceFetchData])
+
+
+  const fetchStatic = useCallback(async (parseQuery) => {
+    try {
+      setLoading(pre => ({ ...pre, static: true }));
+
+      const res = await httpClient.get(PROMO_STATIC_URL).then((res) => res.data);
+
+      if (res.status === 200) {
+        setStatistic({ ...res.data });
+      } else {
+        setStatistic({ ...defaultStatic });
+      }
+    } catch (error) {
+      setStatistic({ ...defaultStatic });
+    } finally {
+      setLoading(pre => ({ ...pre, static: false }));
+    }
+  }, []);
+
+  const debounceFetchStatic = useCallback(debounce(fetchStatic, 300), [fetchStatic]);
+
+  useEffect(() => {
+    debounceFetchStatic()
+
+    return debounceFetchStatic.cancel;
+  }, [debounceFetchStatic]);
+
+  const handleDelete = async (id) => {
+    try {
+      setLoading(pre => ({ ...pre, static: true, list: true }));
+      const res = await httpClient.delete(DELETE_PROMO_URL.replace(":id", id)).then(res => res.data)
+
+      if (res.status === 200) {
+        await Promise.all([
+          debounceFetchData(),
+          debounceFetchStatic(),
+        ])
+        message.success('Promo code deleted successfully');
+      } else {
+        message.success("Failed to delete promo code");
+        setLoading(pre => ({ ...pre, static: false, list: false }));
+      }
+    } catch (error) {
+      setLoading(pre => ({ ...pre, static: false, list: false }));
+      message.error("Failed to delete promo code")
+    }
   };
 
   // Get status color
@@ -254,53 +337,46 @@ export default function PromocodePage() {
     });
   };
 
-  // Toggle promo code status
-  const toggleStatus = (promoCodeId) => {
-    setPromoCodes(prev =>
-      prev.map(p => p.id === promoCodeId ?
-        { ...p, status: p.status === 'active' ? 'inactive' : 'active' } : p
-      )
-    );
-    message.success('Promo code status updated');
-  };
-
-  // Delete promo code
-  const deletePromoCode = (promoCodeId) => {
-    setPromoCodes(prev => prev.filter(p => p.id !== promoCodeId));
-    message.success('Promo code deleted');
-  };
-
   // Clear all expired codes
   const clearExpiredCodes = () => {
     Modal.confirm({
       title: 'Clear Expired Codes',
       content: 'Are you sure you want to delete all expired promo codes? This action cannot be undone.',
-      onOk: () => {
-        setPromoCodes(prev => prev.filter(p => p.status !== 'expired'));
-        message.success('All expired promo codes cleared');
+      onOk: async () => {
+        try {
+          setLoading(pre => ({ ...pre, static: true, list: true }));
+          const res = await httpClient.delete(DELETE_EXPIRED_PROMO_URL).then(res => res.data)
+
+          if (res.status === 200) {
+            await Promise.all([
+              debounceFetchData(),
+              debounceFetchStatic(),
+            ])
+            message.success('All expired promo codes cleared');
+          } else {
+            message.success("Failed to clear all promo code");
+            setLoading(pre => ({ ...pre, static: false, list: false }));
+          }
+        } catch (error) {
+          setLoading(pre => ({ ...pre, static: false, list: false }));
+          message.error("Failed to clear all promo code")
+        }
       }
     });
   };
-
-  // Filter promo codes
-  const filteredPromoCodes = promoCodes.filter(promoCode => {
-    const matchesSearch = promoCode.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      promoCode.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      promoCode.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = filterStatus === 'all' || promoCode.status === filterStatus;
-    const matchesCategory = filterCategory === 'all' || promoCode.category === filterCategory;
-    const matchesTab = activeTab === 'all' ||
-      (activeTab === 'active' && promoCode.status === 'active') ||
-      (activeTab === 'expired' && promoCode.status === 'expired') ||
-      (activeTab === 'expiring' && isExpiringSoon(promoCode.endDate));
-
-    return matchesSearch && matchesStatus && matchesCategory && matchesTab;
-  });
 
   // Calculate usage percentage
   const getUsagePercentage = (current, max) => {
     return Math.round((current / max) * 100);
   };
+
+  const openEditModal = (record, mode) => {
+    togglePromoCodeModalRef.current?.openModal(record, mode);
+  }
+
+  const openCreateModal = () => {
+    togglePromoCodeModalRef.current?.openModal();
+  }
 
   return (
     <div>
@@ -319,10 +395,16 @@ export default function PromocodePage() {
             </p>
           </div>
           <Space>
-            <Button icon={<PlusOutlined />} type="primary" size="large">
+            <Button icon={<PlusOutlined />} type="primary" size="large" onClick={openCreateModal}>
               Create New
             </Button>
-            <Button icon={<ReloadOutlined />} onClick={() => message.success('Promo codes refreshed')}>
+            <Button icon={<ReloadOutlined />} onClick={async () => {
+              setFilter(defaultFilter)
+              await Promise.all([
+                debounceFetchData(defaultFilter),
+                debounceFetchStatic()
+              ])
+            }}>
               Refresh
             </Button>
             <Button icon={<ClearOutlined />} danger onClick={clearExpiredCodes}>
@@ -334,44 +416,52 @@ export default function PromocodePage() {
         {/* Statistics Cards */}
         <Row gutter={16} style={{ marginBottom: '24px' }}>
           <Col xs={6}>
-            <Card style={{ background: 'rgba(24, 144, 255, 0.02)', backdropFilter: 'blur(10px)' }}>
-              <Statistic
-                title="Total Codes"
-                value={promoStats.total}
-                prefix={<GiftOutlined style={{ color: '#667eea' }} />}
-                valueStyle={{ color: '#667eea' }}
-              />
-            </Card>
+            <Spin spinning={loading.static}>
+              <Card style={{ background: 'rgba(24, 144, 255, 0.02)', backdropFilter: 'blur(10px)' }}>
+                <Statistic
+                  title="Total Codes"
+                  value={statistic.total}
+                  prefix={<GiftOutlined style={{ color: '#667eea' }} />}
+                  valueStyle={{ color: '#667eea' }}
+                />
+              </Card>
+            </Spin>
           </Col>
           <Col xs={6}>
-            <Card style={{ background: 'rgba(24, 144, 255, 0.02)', backdropFilter: 'blur(10px)' }}>
-              <Statistic
-                title="Active"
-                value={promoStats.active}
-                valueStyle={{ color: '#52c41a' }}
-                prefix={<CheckOutlined style={{ color: '#52c41a' }} />}
-              />
-            </Card>
+            <Spin spinning={loading.static}>
+              <Card style={{ background: 'rgba(24, 144, 255, 0.02)', backdropFilter: 'blur(10px)' }}>
+                <Statistic
+                  title="Active"
+                  value={statistic.active}
+                  valueStyle={{ color: '#52c41a' }}
+                  prefix={<CheckOutlined style={{ color: '#52c41a' }} />}
+                />
+              </Card>
+            </Spin>
           </Col>
           <Col xs={6}>
-            <Card style={{ background: 'rgba(24, 144, 255, 0.02)', backdropFilter: 'blur(10px)' }}>
-              <Statistic
-                title="Expiring Soon"
-                value={promoStats.nearExpiry}
-                valueStyle={{ color: '#faad14' }}
-                prefix={<ClockCircleOutlined style={{ color: '#faad14' }} />}
-              />
-            </Card>
+            <Spin spinning={loading.static}>
+              <Card style={{ background: 'rgba(24, 144, 255, 0.02)', backdropFilter: 'blur(10px)' }}>
+                <Statistic
+                  title="Expiring Soon"
+                  value={statistic.expiringSoon}
+                  valueStyle={{ color: '#faad14' }}
+                  prefix={<ClockCircleOutlined style={{ color: '#faad14' }} />}
+                />
+              </Card>
+            </Spin>
           </Col>
           <Col xs={6}>
-            <Card style={{ background: 'rgba(24, 144, 255, 0.02)', backdropFilter: 'blur(10px)' }}>
-              <Statistic
-                title="Expired"
-                value={promoStats.expired}
-                valueStyle={{ color: '#ff4d4f' }}
-                prefix={<ExclamationCircleOutlined style={{ color: '#ff4d4f' }} />}
-              />
-            </Card>
+            <Spin spinning={loading.static}>
+              <Card style={{ background: 'rgba(24, 144, 255, 0.02)', backdropFilter: 'blur(10px)' }}>
+                <Statistic
+                  title="Expired"
+                  value={statistic.expired}
+                  valueStyle={{ color: '#ff4d4f' }}
+                  prefix={<ExclamationCircleOutlined style={{ color: '#ff4d4f' }} />}
+                />
+              </Card>
+            </Spin>
           </Col>
         </Row>
 
@@ -381,8 +471,8 @@ export default function PromocodePage() {
             <Col xs={24} sm={8}>
               <Search
                 placeholder="Search promo codes..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                value={filter.keyword}
+                onChange={(e) => setFilter(pre => ({ ...pre, keyword: e.target.value }))}
                 style={{ width: '100%' }}
                 size="large"
               />
@@ -390,8 +480,8 @@ export default function PromocodePage() {
             <Col xs={12} sm={4}>
               <Select
                 placeholder="Status"
-                value={filterStatus}
-                onChange={setFilterStatus}
+                value={filter.status}
+                onChange={(value) => setFilter(pre => ({ ...pre, status: value }))}
                 style={{ width: '100%' }}
                 size="large"
               >
@@ -403,53 +493,49 @@ export default function PromocodePage() {
             </Col>
             <Col xs={12} sm={4}>
               <Select
-                placeholder="Category"
-                value={filterCategory}
-                onChange={setFilterCategory}
+                placeholder="Discount Type"
+                value={filter.discountType}
+                onChange={(value) => setFilter(pre => ({ ...pre, discountType: value }))}
                 style={{ width: '100%' }}
                 size="large"
               >
-                <Option value="all">All Categories</Option>
-                <Option value="general">General</Option>
-                <Option value="welcome">Welcome</Option>
-                <Option value="flash">Flash Sale</Option>
-                <Option value="student">Student</Option>
-                <Option value="vip">VIP</Option>
-                <Option value="first-order">First Order</Option>
+                <Option value="all">All Discount Type</Option>
+                <Option value="percentage">Percentage</Option>
+                <Option value="fixed">Fixed Amount</Option>
               </Select>
             </Col>
           </Row>
         </Card>
       </div>
 
-      {/* Promo Code Tabs */}
-      <Card style={{ marginBottom: '16px', background: 'rgba(24, 144, 255, 0.02)', backdropFilter: 'blur(10px)' }}>
-        <Tabs activeKey={activeTab} onChange={setActiveTab} size="large">
-          <TabPane tab={`All Codes (${promoCodes.length})`} key="all" />
-          <TabPane tab={`Active (${promoStats.active})`} key="active" />
-          <TabPane tab={`Expiring Soon (${promoStats.nearExpiry})`} key="expiring" />
-          <TabPane tab="Expired" key="expired" />
-        </Tabs>
-      </Card>
-
       {/* Promo Codes List */}
-      {filteredPromoCodes.length === 0 ? (
+      {promoCodes.length === 0 ? (
         <Card style={{ background: 'rgba(24, 144, 255, 0.02)', backdropFilter: 'blur(10px)' }}>
           <Empty description="No promo codes found" />
         </Card>
       ) : (
         <List
           itemLayout="vertical"
-          dataSource={filteredPromoCodes}
+          dataSource={promoCodes}
+          loading={loading.list}
           pagination={{
-            pageSize: 8,
+            pageSize: filter.pageSize,
+            current: filter.pageNo,
             showSizeChanger: true,
             showQuickJumper: true,
+            total: total,
+            onChange: (page, pageSize) => {
+              // Fetch data for the selected page
+              setFilter(pre => {
+                debounceFetchData({ ...pre, pageNo: page, pageSize });
+                return ({ ...pre, pageNo: page, pageSize })
+              });
+            },
             showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} promo codes`
           }}
-          renderItem={(promoCode) => {
-            const usagePercent = getUsagePercentage(promoCode.currentUses, promoCode.maxUses);
-            const expiringSoon = isExpiringSoon(promoCode.endDate);
+          renderItem={(record) => {
+            const usagePercent = getUsagePercentage(record.currentUses, record.maxUses);
+            const expiringSoon = isExpiringSoon(record.endDate);
 
             return (
               <Card
@@ -457,7 +543,7 @@ export default function PromocodePage() {
                   marginBottom: '16px',
                   background: 'rgba(24, 144, 255, 0.02)',
                   backdropFilter: 'blur(10px)',
-                  border: expiringSoon ? '2px solid #faad14' : promoCode.status === 'active' ? '2px solid #52c41a' : '1px solid #d9d9d9',
+                  border: expiringSoon ? '2px solid #faad14' : record.status === 'active' ? '2px solid #52c41a' : '1px solid #d9d9d9',
                   boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
                 }}
               >
@@ -466,40 +552,42 @@ export default function PromocodePage() {
                     <Tooltip title="Copy Code">
                       <Button
                         type="primary"
-                        icon={copiedCode === promoCode.code ? <CheckOutlined /> : <CopyOutlined />}
-                        onClick={() => copyPromoCode(promoCode.code)}
+                        icon={copiedCode === record.promoCode ? <CheckOutlined /> : <CopyOutlined />}
+                        onClick={() => copyPromoCode(record.promoCode)}
                         style={{ background: '#667eea' }}
-                      />
-                    </Tooltip>,
-                    <Tooltip title="Share">
-                      <Button
-                        type="text"
-                        icon={<ShareAltOutlined />}
-                        onClick={() => message.info('Share functionality would be implemented here')}
                       />
                     </Tooltip>,
                     <Tooltip title="View Details">
                       <Button
                         type="text"
                         icon={<EyeOutlined />}
-                        onClick={() => setSelectedPromoCode(promoCode)}
+                        style={{ color: '#667eea' }}
+                        onClick={() => viewPromoCodeModalRef?.current?.openModal(record)}
                       />
                     </Tooltip>,
                     <Tooltip title="Edit">
                       <Button
                         type="text"
                         icon={<EditOutlined />}
-                        onClick={() => message.info('Edit functionality would be implemented here')}
+                        style={{ color: '#52c41a' }}
+                        onClick={() => openEditModal(record, "edit")}
                       />
                     </Tooltip>,
-                    <Tooltip title="Delete">
-                      <Button
-                        type="text"
-                        danger
-                        icon={<DeleteOutlined />}
-                        onClick={() => deletePromoCode(promoCode.id)}
-                      />
-                    </Tooltip>
+                    <Popconfirm
+                      title="Delete the promo code"
+                      description="Are you sure to delete this promo code?"
+                      onConfirm={() => handleDelete(record._id)}
+                      okText="Yes"
+                      cancelText="No"
+                    >
+                      <Tooltip title="Delete">
+                        <Button
+                          type="text"
+                          danger
+                          icon={<DeleteOutlined />}
+                        />
+                      </Tooltip>
+                    </Popconfirm>
                   ]}
                 >
                   <List.Item.Meta
@@ -517,13 +605,13 @@ export default function PromocodePage() {
                           fontSize: '24px',
                           fontWeight: 'bold'
                         }}>
-                          {formatDiscount(promoCode).charAt(0)}
+                          {formatDiscount(record).charAt(0)}
                         </div>
-                        {promoCode.creator.avatar ? (
-                          <Avatar src={promoCode.creator.avatar} size={32} />
+                        {record.createdBy?.avatar ? (
+                          <Avatar src={record.createdBy?.avatar} size={32} />
                         ) : (
-                          <Avatar style={{ backgroundColor: getPriorityColor(promoCode.priority) }}>
-                            {promoCode.creator.name.charAt(0)}
+                          <Avatar style={{ backgroundColor: getPriorityColor(record.priority) }}>
+                            {record.createdBy?.username?.charAt(0)}
                           </Avatar>
                         )}
                       </div>
@@ -531,34 +619,34 @@ export default function PromocodePage() {
                     title={
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                         <Text strong style={{ fontSize: '18px', color: '#667eea' }}>
-                          {promoCode.code}
+                          {record.promoCode}
                         </Text>
                         <Text style={{ fontSize: '16px', color: '#52c41a', fontWeight: 'bold' }}>
-                          {formatDiscount(promoCode)}
+                          {formatDiscount(record)}
                         </Text>
-                        <Tag color={getStatusColor(promoCode.status)}>
-                          {promoCode.status.toUpperCase()}
+                        <Tag color={getStatusColor(record.status)}>
+                          {record.status.toUpperCase()}
                         </Tag>
                         {expiringSoon && <Tag color="orange">EXPIRING SOON</Tag>}
-                        <Tag color={getPriorityColor(promoCode.priority)}>
-                          {promoCode.priority.toUpperCase()}
+                        <Tag color={getPriorityColor(record.priority)}>
+                          {record.priority.toUpperCase()}
                         </Tag>
                       </div>
                     }
                     description={
                       <div>
                         <Title level={5} style={{ margin: '8px 0', color: '#2c3e50' }}>
-                          {promoCode.title}
+                          {record.title}
                         </Title>
                         <Paragraph style={{ margin: '8px 0', color: '#64748b' }}>
-                          {promoCode.description}
+                          {record.description}
                         </Paragraph>
 
                         <div style={{ margin: '12px 0' }}>
                           <Text strong>Usage: </Text>
                           <Progress
                             percent={usagePercent}
-                            format={() => `${promoCode.currentUses}/${promoCode.maxUses}`}
+                            format={() => `${record.currentUses}/${record.maxUses}`}
                             strokeColor={{
                               '0%': '#667eea',
                               '100%': '#764ba2',
@@ -569,14 +657,12 @@ export default function PromocodePage() {
 
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap' }}>
                           <Space wrap>
-                            <Text type="secondary">Min Order: ${promoCode.minOrder}</Text>
+                            <Text type="secondary">Min Order: ${record.minOrder}</Text>
                             <Divider type="vertical" />
-                            <Text type="secondary">By: {promoCode.creator.name}</Text>
-                            <Divider type="vertical" />
-                            <Tag>{promoCode.category}</Tag>
+                            <Text type="secondary">By: {record.createdBy?.username}</Text>
                           </Space>
                           <Space>
-                            <Text type="secondary">{formatDate(promoCode.startDate)} - {formatDate(promoCode.endDate)}</Text>
+                            <Text type="secondary">{formatDate(record.startDate)} - {formatDate(record.endDate)}</Text>
                           </Space>
                         </div>
                       </div>
@@ -590,98 +676,21 @@ export default function PromocodePage() {
       )}
 
       {/* Promo Code Detail Modal */}
-      <Modal
-        title={
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <GiftOutlined style={{ color: '#667eea' }} />
-            Promo Code Details
-          </div>
-        }
-        open={selectedPromoCode !== null}
-        onCancel={() => setSelectedPromoCode(null)}
-        footer={[
-          <Button key="copy" icon={<CopyOutlined />} onClick={() => copyPromoCode(selectedPromoCode?.code)}>
-            Copy Code
-          </Button>,
-          <Button key="edit" type="primary" icon={<EditOutlined />}>
-            Edit Code
-          </Button>,
-          <Button key="close" onClick={() => setSelectedPromoCode(null)}>
-            Close
-          </Button>
-        ]}
-        width={700}
-      >
-        {selectedPromoCode && (
-          <div>
-            <div style={{
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              padding: '20px',
-              borderRadius: '12px',
-              marginBottom: '20px',
-              color: 'white',
-              textAlign: 'center'
-            }}>
-              <Title level={2} style={{ color: 'white', margin: '0 0 8px 0' }}>
-                {selectedPromoCode.code}
-              </Title>
-              <Title level={3} style={{ color: 'white', margin: '0 0 8px 0' }}>
-                {formatDiscount(selectedPromoCode)}
-              </Title>
-              <Text style={{ color: 'rgba(255,255,255,0.9)' }}>
-                {selectedPromoCode.title}
-              </Text>
-            </div>
+      <ViewPromoCodeModal
+        ref={viewPromoCodeModalRef}
+        copyPromoCode={copyPromoCode}
+        openEditModal={(record) => openEditModal(record, "edit")}
+      />
 
-            <Descriptions bordered column={2} size="small">
-              <Descriptions.Item label="Description" span={2}>
-                {selectedPromoCode.description}
-              </Descriptions.Item>
-              <Descriptions.Item label="Status">
-                <Tag color={getStatusColor(selectedPromoCode.status)}>
-                  {selectedPromoCode.status.toUpperCase()}
-                </Tag>
-              </Descriptions.Item>
-              <Descriptions.Item label="Priority">
-                <Tag color={getPriorityColor(selectedPromoCode.priority)}>
-                  {selectedPromoCode.priority.toUpperCase()}
-                </Tag>
-              </Descriptions.Item>
-              <Descriptions.Item label="Category">
-                <Tag>{selectedPromoCode.category}</Tag>
-              </Descriptions.Item>
-              <Descriptions.Item label="Minimum Order">
-                ${selectedPromoCode.minOrder}
-              </Descriptions.Item>
-              <Descriptions.Item label="Usage">
-                <Progress
-                  percent={getUsagePercentage(selectedPromoCode.currentUses, selectedPromoCode.maxUses)}
-                  format={() => `${selectedPromoCode.currentUses}/${selectedPromoCode.maxUses}`}
-                  strokeColor={{
-                    '0%': '#667eea',
-                    '100%': '#764ba2',
-                  }}
-                />
-              </Descriptions.Item>
-              <Descriptions.Item label="Valid Period" span={2}>
-                {formatDate(selectedPromoCode.startDate)} - {formatDate(selectedPromoCode.endDate)}
-              </Descriptions.Item>
-              <Descriptions.Item label="Created By" span={2}>
-                <Space>
-                  {selectedPromoCode.creator.avatar ? (
-                    <Avatar src={selectedPromoCode.creator.avatar} size={24} />
-                  ) : (
-                    <Avatar size={24}>
-                      {selectedPromoCode.creator.name.charAt(0)}
-                    </Avatar>
-                  )}
-                  <Text>{selectedPromoCode.creator.name}</Text>
-                </Space>
-              </Descriptions.Item>
-            </Descriptions>
-          </div>
-        )}
-      </Modal>
+      <TogglePromoCodeModal
+        ref={togglePromoCodeModalRef}
+        fetchData={async () => {
+          await Promise.all([
+            debounceFetchData(),
+            debounceFetchStatic()
+          ])
+        }}
+      />
     </div>
   );
 }
