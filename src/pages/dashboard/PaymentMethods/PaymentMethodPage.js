@@ -1,10 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import {
     Card,
     Table,
     Button,
-    Modal,
-    Form,
     Input,
     Select,
     Switch,
@@ -15,10 +13,9 @@ import {
     Tooltip,
     Row,
     Col,
-    Badge,
     Avatar,
     Typography,
-    Divider
+    Spin,
 } from 'antd';
 import {
     PlusOutlined,
@@ -27,7 +24,6 @@ import {
     EyeOutlined,
     SearchOutlined,
     ReloadOutlined,
-    FilterOutlined,
     CreditCardOutlined,
     BankOutlined,
     WalletOutlined,
@@ -37,113 +33,130 @@ import {
     CloseCircleOutlined
 } from '@ant-design/icons';
 import TogglePaymentMethodModal from './components/modals/TogglePaymentMethodModal';
-import ViewOrganizationDetailModal from '../Organizations/components/modals/ViewOrganizationDetailModal';
 import ViewPaymentMethodModal from './components/modals/ViewPaymentMethodModal';
+import { debounce } from 'lodash';
+import httpClient from '../../../utils/HttpClient';
+import { objectToQuery } from '../../../utils/Utils';
+import { DELETE_PAYMENT_METHODS_URL, PAYMENT_METHODS_STATIC_URL, PAYMENT_METHODS_URL, UPDATE_STATUS_PAYMENT_METHODS_URL } from '../../../constants/Url';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 const { Option } = Select;
-const { TextArea } = Input;
 
 const PaymentMethodPage = () => {
+    const defaultStatic = useMemo(() => {
+        return {
+            total: 0,
+            active: 0,
+            inactive: 0,
+            avgFee: 0
+        }
+    }, [])
     const [paymentMethods, setPaymentMethods] = useState([]);
-    const [loading, setLoading] = useState(false);
-    const [modalVisible, setModalVisible] = useState(false);
-    const [viewModalVisible, setViewModalVisible] = useState(false);
-    const [editingMethod, setEditingMethod] = useState(null);
-    const [viewingMethod, setViewingMethod] = useState(null);
-    const [form] = Form.useForm();
-    const [searchText, setSearchText] = useState('');
-    const [filterStatus, setFilterStatus] = useState('all');
-    const [filterType, setFilterType] = useState('all');
-
+    const defaultFilter = useMemo(() => {
+        return {
+            pageNo: 1,
+            pageSize: 10,
+            status: "all",
+            type: "all",
+            keyword: ""
+        }
+    }, [])
+    const [statistic, setStatistic] = useState(defaultStatic);
+    // const [loading, setLoading] = useState(true);
+    const [filter, setFilter] = useState(defaultFilter)
+    const [total, setTotal] = useState(0);
+    const [loading, setLoading] = useState({
+        list: true,
+        static: true,
+    });
     const viewPaymentMethodModalRef = useRef(null);
     const togglePaymentMethodModalRef = useRef(null);
 
     // Mock data
-    useEffect(() => {
-        loadPaymentMethods();
-    }, []);
+    // useEffect(() => {
+    //     loadPaymentMethods();
+    // }, []);
 
-    const loadPaymentMethods = () => {
-        setLoading(true);
-        // Simulate API call
-        setTimeout(() => {
-            const mockData = [
-                {
-                    id: 1,
-                    name: 'Credit Card',
-                    type: 'card',
-                    provider: 'Stripe',
-                    isActive: true,
-                    description: 'Accept all major credit cards including Visa, MasterCard, American Express',
-                    apiKey: 'sk_test_***************',
-                    webhookUrl: 'https://api.example.com/stripe/webhook',
-                    supportedCurrencies: ['USD', 'EUR', 'GBP'],
-                    processingFee: 2.9,
-                    createdAt: '2024-01-15',
-                    lastUsed: '2024-07-19'
-                },
-                {
-                    id: 2,
-                    name: 'PayPal',
-                    type: 'wallet',
-                    provider: 'PayPal',
-                    isActive: true,
-                    description: 'PayPal payment gateway for secure online transactions',
-                    apiKey: 'AQkquBDf***************',
-                    webhookUrl: 'https://api.example.com/paypal/webhook',
-                    supportedCurrencies: ['USD', 'EUR', 'CAD'],
-                    processingFee: 3.5,
-                    createdAt: '2024-02-10',
-                    lastUsed: '2024-07-18'
-                },
-                {
-                    id: 3,
-                    name: 'Bank Transfer',
-                    type: 'bank',
-                    provider: 'Manual',
-                    isActive: false,
-                    description: 'Direct bank transfer for large transactions',
-                    apiKey: null,
-                    webhookUrl: null,
-                    supportedCurrencies: ['USD', 'EUR'],
-                    processingFee: 0,
-                    createdAt: '2024-03-05',
-                    lastUsed: '2024-07-10'
-                },
-                {
-                    id: 4,
-                    name: 'Apple Pay',
-                    type: 'wallet',
-                    provider: 'Apple',
-                    isActive: true,
-                    description: 'Apple Pay integration for iOS devices',
-                    apiKey: 'merchant.com.example',
-                    webhookUrl: 'https://api.example.com/applepay/webhook',
-                    supportedCurrencies: ['USD', 'EUR', 'GBP', 'CAD'],
-                    processingFee: 2.9,
-                    createdAt: '2024-04-20',
-                    lastUsed: '2024-07-19'
-                },
-                {
-                    id: 5,
-                    name: 'Cryptocurrency',
-                    type: 'crypto',
-                    provider: 'BitPay',
-                    isActive: true,
-                    description: 'Accept Bitcoin and other cryptocurrencies',
-                    apiKey: 'btc_live_***************',
-                    webhookUrl: 'https://api.example.com/crypto/webhook',
-                    supportedCurrencies: ['BTC', 'ETH', 'LTC'],
-                    processingFee: 1.0,
-                    createdAt: '2024-05-12',
-                    lastUsed: '2024-07-17'
-                }
-            ];
-            setPaymentMethods(mockData);
-            setLoading(false);
-        }, 1000);
-    };
+    // const loadPaymentMethods = () => {
+    //     setLoading(true);
+    //     // Simulate API call
+    //     setTimeout(() => {
+    //         const mockData = [
+    //             {
+    //                 id: 1,
+    //                 name: 'Credit Card',
+    //                 type: 'card',
+    //                 provider: 'Stripe',
+    //                 isActive: true,
+    //                 description: 'Accept all major credit cards including Visa, MasterCard, American Express',
+    //                 apiKey: 'sk_test_***************',
+    //                 webhookUrl: 'https://api.example.com/stripe/webhook',
+    //                 supportedCurrencies: ['USD', 'EUR', 'GBP'],
+    //                 processingFee: 2.9,
+    //                 createdAt: '2024-01-15',
+    //                 lastUsed: '2024-07-19'
+    //             },
+    //             {
+    //                 id: 2,
+    //                 name: 'PayPal',
+    //                 type: 'wallet',
+    //                 provider: 'PayPal',
+    //                 isActive: true,
+    //                 description: 'PayPal payment gateway for secure online transactions',
+    //                 apiKey: 'AQkquBDf***************',
+    //                 webhookUrl: 'https://api.example.com/paypal/webhook',
+    //                 supportedCurrencies: ['USD', 'EUR', 'CAD'],
+    //                 processingFee: 3.5,
+    //                 createdAt: '2024-02-10',
+    //                 lastUsed: '2024-07-18'
+    //             },
+    //             {
+    //                 id: 3,
+    //                 name: 'Bank Transfer',
+    //                 type: 'bank',
+    //                 provider: 'Manual',
+    //                 isActive: false,
+    //                 description: 'Direct bank transfer for large transactions',
+    //                 apiKey: null,
+    //                 webhookUrl: null,
+    //                 supportedCurrencies: ['USD', 'EUR'],
+    //                 processingFee: 0,
+    //                 createdAt: '2024-03-05',
+    //                 lastUsed: '2024-07-10'
+    //             },
+    //             {
+    //                 id: 4,
+    //                 name: 'Apple Pay',
+    //                 type: 'wallet',
+    //                 provider: 'Apple',
+    //                 isActive: true,
+    //                 description: 'Apple Pay integration for iOS devices',
+    //                 apiKey: 'merchant.com.example',
+    //                 webhookUrl: 'https://api.example.com/applepay/webhook',
+    //                 supportedCurrencies: ['USD', 'EUR', 'GBP', 'CAD'],
+    //                 processingFee: 2.9,
+    //                 createdAt: '2024-04-20',
+    //                 lastUsed: '2024-07-19'
+    //             },
+    //             {
+    //                 id: 5,
+    //                 name: 'Cryptocurrency',
+    //                 type: 'crypto',
+    //                 provider: 'BitPay',
+    //                 isActive: true,
+    //                 description: 'Accept Bitcoin and other cryptocurrencies',
+    //                 apiKey: 'btc_live_***************',
+    //                 webhookUrl: 'https://api.example.com/crypto/webhook',
+    //                 supportedCurrencies: ['BTC', 'ETH', 'LTC'],
+    //                 processingFee: 1.0,
+    //                 createdAt: '2024-05-12',
+    //                 lastUsed: '2024-07-17'
+    //             }
+    //         ];
+    //         setPaymentMethods(mockData);
+    //         setLoading(false);
+    //     }, 1000);
+    // };
 
     const getTypeIcon = (type) => {
         const icons = {
@@ -175,62 +188,105 @@ const PaymentMethodPage = () => {
         togglePaymentMethodModalRef.current?.openModal(record, "edit");
     };
 
-    const handleDelete = (id) => {
-        setPaymentMethods(prev => prev.filter(item => item.id !== id));
-        message.success('Payment method deleted successfully');
-    };
-
     const handleView = (record) => {
         viewPaymentMethodModalRef?.current?.openModal(record)
     };
 
-    const handleSubmit = async (values) => {
+    const fetchStatic = useCallback(async (parseQuery) => {
         try {
-            const supportedCurrencies = values.supportedCurrencies.split(',').map(c => c.trim());
-            const methodData = {
-                ...values,
-                supportedCurrencies,
-                id: editingMethod ? editingMethod.id : Date.now(),
-                createdAt: editingMethod ? editingMethod.createdAt : new Date().toISOString().split('T')[0],
-                lastUsed: editingMethod ? editingMethod.lastUsed : null
-            };
+            setLoading(pre => ({ ...pre, static: true }));
 
-            if (editingMethod) {
-                setPaymentMethods(prev =>
-                    prev.map(item => item.id === editingMethod.id ? methodData : item)
-                );
-                message.success('Payment method updated successfully');
+            const res = await httpClient.get(PAYMENT_METHODS_STATIC_URL).then((res) => res.data);
+
+            if (res.status === 200) {
+                setStatistic({ ...res.data });
             } else {
-                setPaymentMethods(prev => [...prev, methodData]);
-                message.success('Payment method added successfully');
+                setStatistic({ ...defaultStatic });
+            }
+        } catch (error) {
+            setStatistic({ ...defaultStatic });
+        } finally {
+            setLoading(pre => ({ ...pre, static: false }));
+        }
+    }, []);
+
+    const debounceFetchStatic = useCallback(debounce(fetchStatic, 300), [fetchStatic]);
+
+    useEffect(() => {
+        debounceFetchStatic()
+
+        return debounceFetchStatic.cancel;
+    }, [debounceFetchStatic]);
+
+    const toggleStatus = async (id, currentStatus) => {
+        try {
+            setLoading(pre => ({ ...pre, list: true }));
+
+            const payload = {
+                isActive: !currentStatus,
             }
 
-            setModalVisible(false);
-            form.resetFields();
+            const res = await httpClient.put(UPDATE_STATUS_PAYMENT_METHODS_URL.replace(":id", id), payload).then(res => res.data)
+
+            if (res.status === 200) {
+                debounceFetchData()
+                message.success(`Payment method ${!currentStatus ? 'activated' : 'deactivated'}`);
+            } else {
+                message.success("Failed to update status payment method");
+                setLoading(pre => ({ ...pre, list: false }));
+            }
         } catch (error) {
-            message.error('Error saving payment method');
+            setLoading(pre => ({ ...pre, list: false }));
+            message.error("Failed to update status payment method")
         }
     };
 
-    const toggleStatus = (id, currentStatus) => {
-        setPaymentMethods(prev =>
-            prev.map(item =>
-                item.id === id ? { ...item, isActive: !currentStatus } : item
-            )
-        );
-        message.success(`Payment method ${!currentStatus ? 'activated' : 'deactivated'}`);
+    const fetchData = useCallback(async (parseQuery) => {
+        try {
+            setLoading(pre => ({ ...pre, list: true }));
+
+            const res = await httpClient.get(objectToQuery(PAYMENT_METHODS_URL, parseQuery ?? filter)).then(res => res.data); // Simulate fetching data from API
+
+            if (res.status === 200) {
+                setPaymentMethods(res.data);
+                setTotal(res.total)
+            } else {
+                setPaymentMethods([]);
+                setTotal(0)
+            }
+        } catch (error) {
+            setPaymentMethods([]);
+            setTotal(0)
+        } finally {
+            setLoading(pre => ({ ...pre, list: false }));
+        }
+    }, [filter]);
+
+    const handleDelete = async (id) => {
+        try {
+            setLoading(true);
+            const res = await httpClient.delete(DELETE_PAYMENT_METHODS_URL.replace(":id", id)).then(res => res.data)
+
+            if (res.status === 200) {
+                debounceFetchData()
+                message.success('Payment method deleted successfully');
+            } else {
+                message.success("Failed to delete payment method");
+                setLoading(false);
+            }
+        } catch (error) {
+            setLoading(false);
+            message.error("Failed to delete payment method")
+        }
     };
 
-    const filteredData = paymentMethods.filter(item => {
-        const matchesSearch = item.name.toLowerCase().includes(searchText.toLowerCase()) ||
-            item.provider.toLowerCase().includes(searchText.toLowerCase());
-        const matchesStatus = filterStatus === 'all' ||
-            (filterStatus === 'active' && item.isActive) ||
-            (filterStatus === 'inactive' && !item.isActive);
-        const matchesType = filterType === 'all' || item.type === filterType;
+    const debounceFetchData = useCallback(debounce(fetchData, 300), [fetchData])
 
-        return matchesSearch && matchesStatus && matchesType;
-    });
+    useEffect(() => {
+        debounceFetchData()
+
+        return debounceFetchData.cancel
+    }, [debounceFetchData])
 
     const columns = [
         {
@@ -240,12 +296,14 @@ const PaymentMethodPage = () => {
             render: (text, record) => (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <Avatar
-                        icon={getTypeIcon(record.type)}
+                        src={record.imageUrl || undefined}
+                        icon={!record.imageUrl ? getTypeIcon(record.type) : undefined}
                         style={{
-                            backgroundColor: getTypeColor(record.type),
-                            color: 'white'
+                            backgroundColor: record.imageUrl ? undefined : getTypeColor(record.type),
+                            color: record.imageUrl ? undefined : 'white'
                         }}
                     />
+
                     <div>
                         <div style={{ fontWeight: 600, marginBottom: '2px' }}>{text}</div>
                         <Text type="secondary" style={{ fontSize: '12px' }}>{record.provider}</Text>
@@ -268,17 +326,15 @@ const PaymentMethodPage = () => {
             dataIndex: 'isActive',
             key: 'status',
             render: (isActive, record) => (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Badge
-                        status={isActive ? 'success' : 'default'}
-                        text={isActive ? 'Active' : 'Inactive'}
-                    />
-                    <Switch
-                        size="small"
-                        checked={isActive}
-                        onChange={() => toggleStatus(record.id, isActive)}
-                    />
-                </div>
+                <Switch
+                    checked={isActive}
+                    onChange={() => toggleStatus(record._id, isActive)}
+                    checkedChildren="Active"
+                    unCheckedChildren="Inactive"
+                    style={{
+                        backgroundColor: isActive ? '#52c41a' : undefined
+                    }}
+                />
             ),
         },
         {
@@ -330,7 +386,7 @@ const PaymentMethodPage = () => {
                     <Tooltip title="Delete">
                         <Popconfirm
                             title="Are you sure you want to delete this payment method?"
-                            onConfirm={() => handleDelete(record.id)}
+                            onConfirm={() => handleDelete(record._id)}
                             okText="Yes"
                             cancelText="No"
                         >
@@ -365,56 +421,64 @@ const PaymentMethodPage = () => {
             {/* Stats Cards */}
             <Row gutter={16} style={{ marginBottom: '24px' }}>
                 <Col span={6}>
-                    <Card size="small">
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                            <div>
-                                <Text type="secondary">Total Methods</Text>
-                                <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#667eea' }}>
-                                    {paymentMethods.length}
+                    <Spin spinning={loading.static}>
+                        <Card size="small">
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                <div>
+                                    <Text type="secondary">Total Methods</Text>
+                                    <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#667eea' }}>
+                                        {statistic.total}
+                                    </div>
                                 </div>
+                                <Avatar icon={<CreditCardOutlined />} style={{ backgroundColor: '#667eea' }} />
                             </div>
-                            <Avatar icon={<CreditCardOutlined />} style={{ backgroundColor: '#667eea' }} />
-                        </div>
-                    </Card>
+                        </Card>
+                    </Spin>
                 </Col>
                 <Col span={6}>
-                    <Card size="small">
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                            <div>
-                                <Text type="secondary">Active</Text>
-                                <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#52c41a' }}>
-                                    {paymentMethods.filter(m => m.isActive).length}
+                    <Spin spinning={loading.static}>
+                        <Card size="small">
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                <div>
+                                    <Text type="secondary">Active</Text>
+                                    <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#52c41a' }}>
+                                        {statistic.active}
+                                    </div>
                                 </div>
+                                <Avatar icon={<CheckCircleOutlined />} style={{ backgroundColor: '#52c41a' }} />
                             </div>
-                            <Avatar icon={<CheckCircleOutlined />} style={{ backgroundColor: '#52c41a' }} />
-                        </div>
-                    </Card>
+                        </Card>
+                    </Spin>
                 </Col>
                 <Col span={6}>
-                    <Card size="small">
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                            <div>
-                                <Text type="secondary">Inactive</Text>
-                                <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#ff4d4f' }}>
-                                    {paymentMethods.filter(m => !m.isActive).length}
+                    <Spin spinning={loading.static}>
+                        <Card size="small">
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                <div>
+                                    <Text type="secondary">Inactive</Text>
+                                    <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#ff4d4f' }}>
+                                        {statistic.inactive}
+                                    </div>
                                 </div>
+                                <Avatar icon={<CloseCircleOutlined />} style={{ backgroundColor: '#ff4d4f' }} />
                             </div>
-                            <Avatar icon={<CloseCircleOutlined />} style={{ backgroundColor: '#ff4d4f' }} />
-                        </div>
-                    </Card>
+                        </Card>
+                    </Spin>
                 </Col>
                 <Col span={6}>
-                    <Card size="small">
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                            <div>
-                                <Text type="secondary">Avg Fee</Text>
-                                <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#faad14' }}>
-                                    {(paymentMethods.reduce((acc, m) => acc + m.processingFee, 0) / paymentMethods.length).toFixed(1)}%
+                    <Spin spinning={loading.static}>
+                        <Card size="small">
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                <div>
+                                    <Text type="secondary">Avg Fee</Text>
+                                    <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#faad14' }}>
+                                        {statistic.avgFee}%
+                                    </div>
                                 </div>
+                                <Avatar icon={<DollarOutlined />} style={{ backgroundColor: '#faad14' }} />
                             </div>
-                            <Avatar icon={<DollarOutlined />} style={{ backgroundColor: '#faad14' }} />
-                        </div>
-                    </Card>
+                        </Card>
+                    </Spin>
                 </Col>
             </Row>
 
@@ -431,24 +495,24 @@ const PaymentMethodPage = () => {
                         <Input
                             placeholder="Search payment methods..."
                             prefix={<SearchOutlined />}
-                            value={searchText}
-                            onChange={(e) => setSearchText(e.target.value)}
+                            value={filter.keyword}
+                            onChange={(e) => setFilter(pre => ({ ...pre, keyword: e.target.value }))}
                             style={{ width: 250 }}
                         />
                         <Select
                             placeholder="Status"
-                            value={filterStatus}
-                            onChange={setFilterStatus}
+                            value={filter.status}
+                            onChange={(value) => setFilter(pre => ({ ...pre, status: value }))}
                             style={{ width: 120 }}
                         >
                             <Option value="all">All Status</Option>
-                            <Option value="active">Active</Option>
-                            <Option value="inactive">Inactive</Option>
+                            <Option value="true">Active</Option>
+                            <Option value="false">Inactive</Option>
                         </Select>
                         <Select
                             placeholder="Type"
-                            value={filterType}
-                            onChange={setFilterType}
+                            value={filter.type}
+                            onChange={(value) => setFilter(pre => ({ ...pre, type: value }))}
                             style={{ width: 120 }}
                         >
                             <Option value="all">All Types</Option>
@@ -462,8 +526,14 @@ const PaymentMethodPage = () => {
                     <Space>
                         <Button
                             icon={<ReloadOutlined />}
-                            onClick={loadPaymentMethods}
-                            loading={loading}
+                            onClick={async () => {
+                                setFilter(defaultFilter)
+                                await Promise.all([
+                                    debounceFetchData(defaultFilter),
+                                    debounceFetchStatic(),
+                                ])
+                            }}
+                            loading={loading.list}
                         >
                             Refresh
                         </Button>
@@ -484,13 +554,22 @@ const PaymentMethodPage = () => {
                 {/* Table */}
                 <Table
                     columns={columns}
-                    dataSource={filteredData}
-                    loading={loading}
-                    rowKey="id"
+                    dataSource={paymentMethods}
+                    loading={loading.list}
+                    rowKey="_id"
                     pagination={{
-                        pageSize: 10,
+                        pageSize: filter.pageSize,
+                        current: filter.pageNo,
                         showSizeChanger: true,
                         showQuickJumper: true,
+                        total: total,
+                        onChange: (page, pageSize) => {
+                            // Fetch data for the selected page
+                            setFilter(pre => {
+                                debounceFetchData({ ...pre, pageNo: page, pageSize });
+                                return ({ ...pre, pageNo: page, pageSize })
+                            });
+                        },
                         showTotal: (total, range) =>
                             `${range[0]}-${range[1]} of ${total} payment methods`,
                     }}
@@ -506,6 +585,12 @@ const PaymentMethodPage = () => {
             {/* Add/Edit Modal */}
             <TogglePaymentMethodModal
                 ref={togglePaymentMethodModalRef}
+                fetchData={async () => {
+                    await Promise.all([
+                        debounceFetchData(),
+                        debounceFetchStatic(),
+                    ])
+                }}
             />
         </div>
     );

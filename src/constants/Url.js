@@ -1,3 +1,5 @@
+export const UPLOAD_FILE = "/upload";
+
 export const AUTH_LOGIN_URL = "/auth/login";
 export const AUTH_REGISTER_URL = "/auth/register";
 export const AUTH_FORGOT_PASSWORD_URL = "/auth/forgot-password";
@@ -35,6 +37,7 @@ export const CREATE_PAYMENT_METHODS_URL = "/payment-methods";
 export const UPDATE_PAYMENT_METHODS_URL = "/payment-methods/:id";
 export const UPDATE_STATUS_PAYMENT_METHODS_URL = "/payment-methods/status/:id";
 export const DELETE_PAYMENT_METHODS_URL = "/payment-methods/:id";
+export const PAYMENT_METHODS_STATIC_URL = "/payment-methods/static";
 
 export const BASE_URL = "/assets/images";
 export const BASE_FILE_URL = "/assets/files";

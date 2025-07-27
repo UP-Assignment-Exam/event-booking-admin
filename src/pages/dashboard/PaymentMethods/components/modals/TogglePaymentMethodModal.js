@@ -9,11 +9,13 @@ import {
     Row,
     Col,
     Divider,
-    message
+    message,
+    Image
 } from 'antd';
 import httpClient from '../../../../../utils/HttpClient';
 import { CREATE_PAYMENT_METHODS_URL, PAYMENT_METHODS_URL, UPDATE_PAYMENT_METHODS_URL } from '../../../../../constants/Url';
 import { extractErrorMessage } from '../../../../../utils/Utils';
+import UploadComponent from "../../../../../components/uploads/UploadComponent";
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -34,10 +36,13 @@ function TogglePaymentMethodModal(props, ref) {
     const handleSubmit = async (data) => {
         try {
             setLoading(true);
-            console.log("data =", data)
+            const payload = {
+                ...data,
+                supportedCurrencies: data?.supportedCurrencies?.split(",")
+            }
             if (mode === 'create') {
                 // Handle create logic
-                const res = await httpClient.post(CREATE_PAYMENT_METHODS_URL, data).then(res => res.data)
+                const res = await httpClient.post(CREATE_PAYMENT_METHODS_URL, payload).then(res => res.data)
 
                 if (res.status === 200) {
                     message.success('Role created successfully!');
@@ -48,7 +53,7 @@ function TogglePaymentMethodModal(props, ref) {
                 }
             } else if (mode === 'edit') {
                 // Handle edit logic
-                const res = await httpClient.put(UPDATE_PAYMENT_METHODS_URL.replace(":id", record?._id), data).then(res => res.data)
+                const res = await httpClient.put(UPDATE_PAYMENT_METHODS_URL.replace(":id", record?._id), payload).then(res => res.data)
 
                 if (res.status === 200) {
                     message.success('Role updated successfully!');
@@ -66,11 +71,21 @@ function TogglePaymentMethodModal(props, ref) {
         }
     }
 
+    const handleUploadSuccess = (url) => {
+        form.setFieldsValue({ imageUrl: url });
+    };
+
     useImperativeHandle(ref, () => ({
         openModal: async (paymentMethods, mode) => {
             setOpen(true);
-            setRecord(paymentMethods);
-            form.setFieldsValue({ ...paymentMethods });
+            setRecord({
+                ...paymentMethods,
+                supportedCurrencies: paymentMethods?.supportedCurrencies?.join(",") || ""
+            });
+            form.setFieldsValue({
+                ...paymentMethods,
+                supportedCurrencies: paymentMethods?.supportedCurrencies?.join(",") || ""
+            });
             setMode(mode);
         },
         closeModal: onClose
@@ -180,6 +195,30 @@ function TogglePaymentMethodModal(props, ref) {
                     <Input placeholder="https://api.example.com/webhook" />
                 </Form.Item>
 
+                {/* Upload component */}
+                <Form.Item label="Image">
+                    <UploadComponent onUploadSuccess={handleUploadSuccess} />
+                </Form.Item>
+
+                <Form.Item shouldUpdate={(prev, curr) => prev.imageUrl !== curr.imageUrl}>
+                    {({ getFieldValue }) => {
+                        const imageUrl = getFieldValue('imageUrl');
+                        return imageUrl ? (
+                            <Image
+                                width={150}
+                                src={imageUrl}
+                                alt="Image preview"
+                                style={{ marginBottom: 16, borderRadius: 8 }}
+                            />
+                        ) : null;
+                    }}
+                </Form.Item>
+
+                {/* Hidden input for imageUrl */}
+                <Form.Item name="imageUrl" hidden>
+                    <Input />
+                </Form.Item>
+
                 <Form.Item
                     name="isActive"
                     label="Status"
@@ -202,6 +241,7 @@ function TogglePaymentMethodModal(props, ref) {
                             background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                             border: 'none'
                         }}
+                        loading={loading}
                     >
                         {mode === "edit" ? 'Update' : 'Create'}
                     </Button>
