@@ -70,6 +70,9 @@ export const UPDATE_EVENTS_STATUS_URL = '/events/status/:id';
 export const DASHBOARD_STATIC_URL = "/dashboards/statistics";
 export const DASHBOARD_RECENT_EVENT_URL = "/dashboards/recent-event";
 
+export const UPDATE_PROFILE_URL = "/users/profile";
+export const CHANGE_PROFILE_PASSWORD_URL= "/profile/change-password";
+
 export const BASE_URL = "/assets/images";
 export const BASE_FILE_URL = "/assets/files";
 

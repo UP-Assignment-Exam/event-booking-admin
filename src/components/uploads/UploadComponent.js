@@ -4,7 +4,7 @@ import { UploadOutlined } from '@ant-design/icons';
 import { UPLOAD_FILE } from '../../constants/Url';
 import { useSelector } from 'react-redux';
 
-const PaymentMethodUpload = ({ onUploadSuccess }) => {
+const UploadComponent = ({ onUploadSuccess }) => {
   const { token } = useSelector((state) => state.auth);
   const [loading, setLoading] = useState(false);
 
@@ -48,4 +48,4 @@ const PaymentMethodUpload = ({ onUploadSuccess }) => {
   );
 };
 
-export default PaymentMethodUpload;
+export default UploadComponent;

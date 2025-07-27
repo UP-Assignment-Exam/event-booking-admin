@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
     Card,
     Row,
@@ -38,24 +38,30 @@ import {
     EyeInvisibleOutlined,
     CheckCircleOutlined,
     ClockCircleOutlined,
-    StarFilled,
     TrophyOutlined
 } from '@ant-design/icons';
 import { useSelector } from 'react-redux';
 import dayjs from 'dayjs';
 import './ProfilePage.css';
+import { useNavigate } from 'react-router-dom';
+import EditProfileModal from './components/modals/EditProfileModal';
+import UploadProfileModal from './components/modals/UploadProfileModal';
 
 const { Option } = Select;
 const { TextArea } = Input;
 const { TabPane } = Tabs;
 
 const ProfilePage = () => {
+    const navigate = useNavigate();
+    const { user } = useSelector((state) => state.auth);
     const isDarkMode = useSelector((state) => state.theme.isDarkMode);
     const [form] = Form.useForm();
     const [isEditing, setIsEditing] = useState(false);
     const [activeTab, setActiveTab] = useState('overview');
-    const [showPassword, setShowPassword] = useState(false);
     const [avatarModalVisible, setAvatarModalVisible] = useState(false);
+
+    const editProfileModalRef = useRef(null);
+    const uploadProfileModalRef = useRef(null);
 
     // Mock user data
     const [userProfile, setUserProfile] = useState({
@@ -76,13 +82,7 @@ const ProfilePage = () => {
         organizationsManaged: 12,
         eventsCreated: 156
     });
-
-    const handleSave = (values) => {
-        console.log('Saving profile:', values);
-        setUserProfile({ ...userProfile, ...values });
-        setIsEditing(false);
-    };
-
+    
     const profileStats = [
         {
             title: 'Total Logins',
@@ -157,6 +157,11 @@ const ProfilePage = () => {
         }
     ];
 
+    const activeStatus = {
+        true: "Active",
+        false: "Inactive"
+    }
+
     return (
         <div className={`profile-detail ${isDarkMode ? 'dark-theme' : 'light-theme'}`}>
             {/* Header Section */}
@@ -164,16 +169,21 @@ const ProfilePage = () => {
                 <Row gutter={24} align="middle">
                     <Col xs={24} sm={6} md={4}>
                         <div className="avatar-section">
-                            <Badge count={<Button 
-                                type="primary" 
-                                shape="circle" 
-                                size="small" 
-                                icon={<CameraOutlined />}
-                                onClick={() => setAvatarModalVisible(true)}
-                            />} offset={[-5, 35]}>
-                                <Avatar 
-                                    size={120} 
-                                    src={userProfile.avatar}
+                            <Badge
+                                count={
+                                    <Button
+                                        type="primary"
+                                        shape="circle"
+                                        size="small"
+                                        icon={<CameraOutlined />}
+                                        onClick={() => uploadProfileModalRef?.current?.openModal()}
+                                    />
+                                }
+                                offset={[-5, 35]}
+                            >
+                                <Avatar
+                                    size={120}
+                                    src={user?.avatar}
                                     className="profile-avatar"
                                 />
                             </Badge>
@@ -182,20 +192,20 @@ const ProfilePage = () => {
                     <Col xs={24} sm={12} md={14}>
                         <div className="profile-info">
                             <div className="profile-name-section">
-                                <h2 className="profile-name">{userProfile.name}</h2>
+                                <h2 className="profile-name">{user?.username}</h2>
                                 <Tag color="success" className="status-tag">
-                                    <Badge status="success" /> {userProfile.status.toUpperCase()}
+                                    <Badge status="success" /> {activeStatus[user?.status]?.toUpperCase()}
                                 </Tag>
                             </div>
-                            <p className="profile-role">{userProfile.role} • {userProfile.department}</p>
+                            <p className="profile-role">{user.role?.name}</p>
                             <Space size="large" className="profile-meta">
-                                <span><EnvironmentOutlined /> {userProfile.location}</span>
-                                <span><CalendarOutlined /> Joined {dayjs(userProfile.joinDate).format('MMM DD, YYYY')}</span>
+                                <span><EnvironmentOutlined /> {user?.location || "N/A"}</span>
+                                <span><CalendarOutlined /> Joined {dayjs(user?.createdAt).format('MMM DD, YYYY')}</span>
                             </Space>
                             <div className="profile-completion">
                                 <span>Profile Completion</span>
-                                <Progress 
-                                    percent={userProfile.profileCompletion} 
+                                <Progress
+                                    percent={userProfile.profileCompletion}
                                     size="small"
                                     strokeColor={{
                                         '0%': '#667eea',
@@ -207,17 +217,18 @@ const ProfilePage = () => {
                     </Col>
                     <Col xs={24} sm={6} md={6}>
                         <div className="profile-actions">
-                            <Button 
-                                type="primary" 
+                            <Button
+                                type="primary"
                                 icon={<EditOutlined />}
-                                onClick={() => setIsEditing(true)}
+                                onClick={() => editProfileModalRef?.current?.openModal()}
                                 className="edit-profile-btn"
                             >
                                 Edit Profile
                             </Button>
-                            <Button 
+                            <Button
                                 icon={<SettingOutlined />}
                                 className="settings-btn"
+                                onClick={() => navigate("/preferences")}
                             >
                                 Settings
                             </Button>
@@ -231,7 +242,7 @@ const ProfilePage = () => {
                 {profileStats.map((stat, index) => (
                     <Col xs={24} sm={12} md={6} key={index}>
                         <Card className="stat-card" bordered={false}>
-                            <Statistic 
+                            <Statistic
                                 title={stat.title}
                                 value={stat.value}
                                 prefix={stat.prefix}
@@ -244,8 +255,8 @@ const ProfilePage = () => {
 
             {/* Main Content Tabs */}
             <Card className="profile-content-card" bordered={false}>
-                <Tabs 
-                    activeKey={activeTab} 
+                <Tabs
+                    activeKey={activeTab}
                     onChange={setActiveTab}
                     className="profile-tabs"
                 >
@@ -257,31 +268,31 @@ const ProfilePage = () => {
                                         <Col xs={24} sm={12}>
                                             <div className="info-item">
                                                 <label><MailOutlined /> Email</label>
-                                                <p>{userProfile.email}</p>
+                                                <p>{user?.email}</p>
                                             </div>
                                         </Col>
                                         <Col xs={24} sm={12}>
                                             <div className="info-item">
                                                 <label><PhoneOutlined /> Phone</label>
-                                                <p>{userProfile.phone}</p>
+                                                <p>{user?.phone}</p>
                                             </div>
                                         </Col>
                                         <Col xs={24} sm={12}>
                                             <div className="info-item">
                                                 <label><UserOutlined /> Employee ID</label>
-                                                <p>{userProfile.id}</p>
+                                                <p>{user?._id}</p>
                                             </div>
                                         </Col>
                                         <Col xs={24} sm={12}>
                                             <div className="info-item">
                                                 <label><ClockCircleOutlined /> Last Login</label>
-                                                <p>{dayjs(userProfile.lastLogin).format('MMM DD, YYYY HH:mm')}</p>
+                                                <p>{dayjs(user?.lastLogin).format('MMM DD, YYYY HH:mm')}</p>
                                             </div>
                                         </Col>
                                         <Col xs={24}>
                                             <div className="info-item">
                                                 <label><UserOutlined /> Bio</label>
-                                                <p>{userProfile.bio}</p>
+                                                <p>{user?.bio}</p>
                                             </div>
                                         </Col>
                                     </Row>
@@ -301,19 +312,19 @@ const ProfilePage = () => {
                                 <Card title="Password & Security" className="security-card" bordered={false}>
                                     <Form layout="vertical">
                                         <Form.Item label="Current Password">
-                                            <Input.Password 
+                                            <Input.Password
                                                 placeholder="Enter current password"
                                                 iconRender={visible => (visible ? <EyeOutlined /> : <EyeInvisibleOutlined />)}
                                             />
                                         </Form.Item>
                                         <Form.Item label="New Password">
-                                            <Input.Password 
+                                            <Input.Password
                                                 placeholder="Enter new password"
                                                 iconRender={visible => (visible ? <EyeOutlined /> : <EyeInvisibleOutlined />)}
                                             />
                                         </Form.Item>
                                         <Form.Item label="Confirm New Password">
-                                            <Input.Password 
+                                            <Input.Password
                                                 placeholder="Confirm new password"
                                                 iconRender={visible => (visible ? <EyeOutlined /> : <EyeInvisibleOutlined />)}
                                             />
@@ -350,7 +361,7 @@ const ProfilePage = () => {
                                         <Switch />
                                     </div>
                                     <Divider />
-                                    <Alert 
+                                    <Alert
                                         message="Security Score: Strong"
                                         description="Your account security settings are well configured."
                                         type="success"
@@ -433,84 +444,16 @@ const ProfilePage = () => {
                 </Tabs>
             </Card>
 
-            {/* Edit Profile Modal */}
-            <Modal
-                title="Edit Profile"
-                open={isEditing}
-                onCancel={() => setIsEditing(false)}
-                footer={null}
-                width={800}
-                className="edit-profile-modal"
-            >
-                <Form
-                    form={form}
-                    layout="vertical"
-                    initialValues={userProfile}
-                    onFinish={handleSave}
-                >
-                    <Row gutter={16}>
-                        <Col span={12}>
-                            <Form.Item label="Full Name" name="name" rules={[{ required: true }]}>
-                                <Input prefix={<UserOutlined />} />
-                            </Form.Item>
-                        </Col>
-                        <Col span={12}>
-                            <Form.Item label="Email" name="email" rules={[{ required: true, type: 'email' }]}>
-                                <Input prefix={<MailOutlined />} />
-                            </Form.Item>
-                        </Col>
-                        <Col span={12}>
-                            <Form.Item label="Phone" name="phone">
-                                <Input prefix={<PhoneOutlined />} />
-                            </Form.Item>
-                        </Col>
-                        <Col span={12}>
-                            <Form.Item label="Location" name="location">
-                                <Input prefix={<EnvironmentOutlined />} />
-                            </Form.Item>
-                        </Col>
-                        <Col span={24}>
-                            <Form.Item label="Bio" name="bio">
-                                <TextArea rows={4} placeholder="Tell us about yourself..." />
-                            </Form.Item>
-                        </Col>
-                    </Row>
-                    <div className="modal-actions">
-                        <Button onClick={() => setIsEditing(false)}>
-                            Cancel
-                        </Button>
-                        <Button type="primary" htmlType="submit">
-                            Save Changes
-                        </Button>
-                    </div>
-                </Form>
-            </Modal>
 
             {/* Avatar Upload Modal */}
-            <Modal
-                title="Update Profile Picture"
-                open={avatarModalVisible}
-                onCancel={() => setAvatarModalVisible(false)}
-                footer={null}
-                className="avatar-modal"
-            >
-                <div className="avatar-upload-section">
-                    <Avatar size={120} src={userProfile.avatar} className="current-avatar" />
-                    <Upload
-                        listType="picture"
-                        maxCount={1}
-                        beforeUpload={() => false}
-                        onChange={(info) => {
-                            console.log('Avatar upload:', info);
-                        }}
-                    >
-                        <Button type="primary" icon={<CameraOutlined />}>
-                            Choose New Photo
-                        </Button>
-                    </Upload>
-                    <p className="upload-hint">Recommended size: 400x400px, Max size: 2MB</p>
-                </div>
-            </Modal>
+            <UploadProfileModal
+                ref={uploadProfileModalRef}
+            />
+
+            {/* Edit Profile Modal */}
+            <EditProfileModal
+                ref={editProfileModalRef}
+            />
         </div>
     );
 };
