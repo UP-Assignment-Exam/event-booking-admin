@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
     Card,
     Table,
@@ -36,6 +36,9 @@ import {
     CheckCircleOutlined,
     CloseCircleOutlined
 } from '@ant-design/icons';
+import TogglePaymentMethodModal from './components/modals/TogglePaymentMethodModal';
+import ViewOrganizationDetailModal from '../Organizations/components/modals/ViewOrganizationDetailModal';
+import ViewPaymentMethodModal from './components/modals/ViewPaymentMethodModal';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -52,6 +55,9 @@ const PaymentMethodPage = () => {
     const [searchText, setSearchText] = useState('');
     const [filterStatus, setFilterStatus] = useState('all');
     const [filterType, setFilterType] = useState('all');
+
+    const viewPaymentMethodModalRef = useRef(null);
+    const togglePaymentMethodModalRef = useRef(null);
 
     // Mock data
     useEffect(() => {
@@ -162,18 +168,11 @@ const PaymentMethodPage = () => {
     };
 
     const handleAdd = () => {
-        setEditingMethod(null);
-        setModalVisible(true);
-        form.resetFields();
+        togglePaymentMethodModalRef.current?.openModal({}, "create");
     };
 
     const handleEdit = (record) => {
-        setEditingMethod(record);
-        setModalVisible(true);
-        form.setFieldsValue({
-            ...record,
-            supportedCurrencies: record.supportedCurrencies.join(',')
-        });
+        togglePaymentMethodModalRef.current?.openModal(record, "edit");
     };
 
     const handleDelete = (id) => {
@@ -182,8 +181,7 @@ const PaymentMethodPage = () => {
     };
 
     const handleView = (record) => {
-        setViewingMethod(record);
-        setViewModalVisible(true);
+        viewPaymentMethodModalRef?.current?.openModal(record)
     };
 
     const handleSubmit = async (values) => {
@@ -499,245 +497,16 @@ const PaymentMethodPage = () => {
                 />
             </Card>
 
-            {/* Add/Edit Modal */}
-            <Modal
-                title={editingMethod ? 'Edit Payment Method' : 'Add Payment Method'}
-                open={modalVisible}
-                onCancel={() => setModalVisible(false)}
-                width={600}
-                footer={null}
-            >
-                <Form
-                    form={form}
-                    layout="vertical"
-                    onFinish={handleSubmit}
-                    style={{ marginTop: '20px' }}
-                >
-                    <Row gutter={16}>
-                        <Col span={12}>
-                            <Form.Item
-                                name="name"
-                                label="Payment Method Name"
-                                rules={[{ required: true, message: 'Please enter payment method name' }]}
-                            >
-                                <Input placeholder="e.g., Credit Card, PayPal" />
-                            </Form.Item>
-                        </Col>
-                        <Col span={12}>
-                            <Form.Item
-                                name="provider"
-                                label="Provider"
-                                rules={[{ required: true, message: 'Please enter provider name' }]}
-                            >
-                                <Input placeholder="e.g., Stripe, PayPal, Square" />
-                            </Form.Item>
-                        </Col>
-                    </Row>
-
-                    <Row gutter={16}>
-                        <Col span={12}>
-                            <Form.Item
-                                name="type"
-                                label="Payment Type"
-                                rules={[{ required: true, message: 'Please select payment type' }]}
-                            >
-                                <Select placeholder="Select payment type">
-                                    <Option value="card">Credit/Debit Card</Option>
-                                    <Option value="bank">Bank Transfer</Option>
-                                    <Option value="wallet">Digital Wallet</Option>
-                                    <Option value="crypto">Cryptocurrency</Option>
-                                    <Option value="qr">QR Code</Option>
-                                </Select>
-                            </Form.Item>
-                        </Col>
-                        <Col span={12}>
-                            <Form.Item
-                                name="processingFee"
-                                label="Processing Fee (%)"
-                                rules={[{ required: true, message: 'Please enter processing fee' }]}
-                            >
-                                <Input type="number" min="0" max="100" step="0.1" />
-                            </Form.Item>
-                        </Col>
-                    </Row>
-
-                    <Form.Item
-                        name="description"
-                        label="Description"
-                        rules={[{ required: true, message: 'Please enter description' }]}
-                    >
-                        <TextArea rows={3} placeholder="Brief description of the payment method" />
-                    </Form.Item>
-
-                    <Row gutter={16}>
-                        <Col span={12}>
-                            <Form.Item
-                                name="apiKey"
-                                label="API Key / Identifier"
-                            >
-                                <Input.Password placeholder="API key or merchant identifier" />
-                            </Form.Item>
-                        </Col>
-                        <Col span={12}>
-                            <Form.Item
-                                name="supportedCurrencies"
-                                label="Supported Currencies"
-                                rules={[{ required: true, message: 'Please enter supported currencies' }]}
-                            >
-                                <Input placeholder="USD,EUR,GBP (comma separated)" />
-                            </Form.Item>
-                        </Col>
-                    </Row>
-
-                    <Form.Item
-                        name="webhookUrl"
-                        label="Webhook URL"
-                    >
-                        <Input placeholder="https://api.example.com/webhook" />
-                    </Form.Item>
-
-                    <Form.Item
-                        name="isActive"
-                        label="Status"
-                        valuePropName="checked"
-                        initialValue={true}
-                    >
-                        <Switch checkedChildren="Active" unCheckedChildren="Inactive" />
-                    </Form.Item>
-
-                    <Divider />
-
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
-                        <Button onClick={() => setModalVisible(false)}>
-                            Cancel
-                        </Button>
-                        <Button
-                            type="primary"
-                            htmlType="submit"
-                            style={{
-                                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                                border: 'none'
-                            }}
-                        >
-                            {editingMethod ? 'Update' : 'Create'}
-                        </Button>
-                    </div>
-                </Form>
-            </Modal>
 
             {/* View Details Modal */}
-            <Modal
-                title="Payment Method Details"
-                open={viewModalVisible}
-                onCancel={() => setViewModalVisible(false)}
-                width={600}
-                footer={[
-                    <Button key="close" onClick={() => setViewModalVisible(false)}>
-                        Close
-                    </Button>
-                ]}
-            >
-                {viewingMethod && (
-                    <div style={{ marginTop: '20px' }}>
-                        <Row gutter={16}>
-                            <Col span={24}>
-                                <div style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '16px',
-                                    marginBottom: '20px',
-                                    padding: '16px',
-                                    background: 'rgba(102, 126, 234, 0.05)',
-                                    borderRadius: '8px'
-                                }}>
-                                    <Avatar
-                                        size={48}
-                                        icon={getTypeIcon(viewingMethod.type)}
-                                        style={{
-                                            backgroundColor: getTypeColor(viewingMethod.type),
-                                            color: 'white'
-                                        }}
-                                    />
-                                    <div>
-                                        <Title level={4} style={{ margin: 0 }}>{viewingMethod.name}</Title>
-                                        <Text type="secondary">{viewingMethod.provider}</Text>
-                                        <div>
-                                            <Tag color={getTypeColor(viewingMethod.type)} style={{ marginTop: '4px' }}>
-                                                {viewingMethod.type}
-                                            </Tag>
-                                            <Badge
-                                                status={viewingMethod.isActive ? 'success' : 'default'}
-                                                text={viewingMethod.isActive ? 'Active' : 'Inactive'}
-                                                style={{ marginLeft: '8px' }}
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-                            </Col>
-                        </Row>
+            <ViewPaymentMethodModal
+                ref={viewPaymentMethodModalRef}
+            />
 
-                        <Row gutter={16}>
-                            <Col span={12}>
-                                <div style={{ marginBottom: '16px' }}>
-                                    <Text strong>Processing Fee</Text>
-                                    <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#667eea' }}>
-                                        {viewingMethod.processingFee === 0 ? 'Free' : `${viewingMethod.processingFee}%`}
-                                    </div>
-                                </div>
-                            </Col>
-                            <Col span={12}>
-                                <div style={{ marginBottom: '16px' }}>
-                                    <Text strong>Created Date</Text>
-                                    <div>{viewingMethod.createdAt}</div>
-                                </div>
-                            </Col>
-                        </Row>
-
-                        <div style={{ marginBottom: '16px' }}>
-                            <Text strong>Description</Text>
-                            <div style={{ marginTop: '4px' }}>{viewingMethod.description}</div>
-                        </div>
-
-                        <div style={{ marginBottom: '16px' }}>
-                            <Text strong>Supported Currencies</Text>
-                            <div style={{ marginTop: '8px', display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
-                                {viewingMethod.supportedCurrencies.map(currency => (
-                                    <Tag key={currency}>{currency}</Tag>
-                                ))}
-                            </div>
-                        </div>
-
-                        {viewingMethod.apiKey && (
-                            <div style={{ marginBottom: '16px' }}>
-                                <Text strong>API Key</Text>
-                                <div style={{
-                                    marginTop: '4px',
-                                    fontFamily: 'monospace',
-                                    background: 'rgba(0,0,0,0.05)',
-                                    padding: '8px',
-                                    borderRadius: '4px'
-                                }}>
-                                    {viewingMethod.apiKey}
-                                </div>
-                            </div>
-                        )}
-
-                        {viewingMethod.webhookUrl && (
-                            <div style={{ marginBottom: '16px' }}>
-                                <Text strong>Webhook URL</Text>
-                                <div style={{ marginTop: '4px' }}>{viewingMethod.webhookUrl}</div>
-                            </div>
-                        )}
-
-                        {viewingMethod.lastUsed && (
-                            <div>
-                                <Text strong>Last Used</Text>
-                                <div>{viewingMethod.lastUsed}</div>
-                            </div>
-                        )}
-                    </div>
-                )}
-            </Modal>
+            {/* Add/Edit Modal */}
+            <TogglePaymentMethodModal
+                ref={togglePaymentMethodModalRef}
+            />
         </div>
     );
 };

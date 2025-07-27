@@ -21,7 +21,7 @@ import { TiTicket } from 'react-icons/ti';
 import dayjs from 'dayjs';
 import ToggleEventTicketModal from './components/modals/ToggleEventTicketModal';
 import httpClient from '../../../utils/HttpClient';
-import { TICKET_TYPES_URL } from '../../../constants/Url';
+import { DELETE_TICKET_TYPES_URL, TICKET_TYPES_URL } from '../../../constants/Url';
 import { debounce } from 'lodash';
 
 
@@ -76,10 +76,23 @@ const TicketTypePage = () => {
         }
     };
 
-    // const handleDelete = (id) => {
-    //     setTicketTypes(prev => prev.filter(type => type.id !== id));
-    //     message.success('Ticket type deleted successfully!');
-    // };
+    const handleDelete = async (id) => {
+        try {
+            setLoading(true);
+            const res = await httpClient.delete(DELETE_TICKET_TYPES_URL.replace(":id", id)).then(res => res.data)
+
+            if (res.status === 200) {
+                debounceFetchData()
+                message.success("Successfully deleted Ticket type.");
+            } else {
+                message.success("Failed to delete Ticket type");
+                setLoading(false);
+            }
+        } catch (error) {
+            setLoading(false);
+            message.error("Failed to delete Ticket type")
+        }
+    };
 
     const formatDate = (dateString) => {
         if (!dateString) return 'Never';
@@ -131,9 +144,9 @@ const TicketTypePage = () => {
                     />
                     <div>
                         <div style={{ fontWeight: 600, fontSize: '14px' }}>{text}</div>
-                        <div style={{ fontSize: '12px', color: '#64748b' }}>
+                        {/* <div style={{ fontSize: '12px', color: '#64748b' }}>
                             ID: <Tag size="small">#{record._id}</Tag>
-                        </div>
+                        </div> */}
                     </div>
                 </div>
             ),
@@ -196,10 +209,10 @@ const TicketTypePage = () => {
                             style={{ color: '#52c41a' }}
                         />
                     </Tooltip>
-                    {/* <Popconfirm
+                    <Popconfirm
                         title="Delete Ticket Type"
                         description="Are you sure you want to delete this ticket type?"
-                        onConfirm={() => handleDelete(record.id)}
+                        onConfirm={() => handleDelete(record._id)}
                         okText="Yes"
                         cancelText="No"
                     >
@@ -210,7 +223,7 @@ const TicketTypePage = () => {
                                 style={{ color: '#ff4d4f' }}
                             />
                         </Tooltip>
-                    </Popconfirm> */}
+                    </Popconfirm>
                 </Space>
             ),
         },

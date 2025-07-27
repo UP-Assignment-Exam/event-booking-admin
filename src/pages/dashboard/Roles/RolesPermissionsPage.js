@@ -1,23 +1,14 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
     Table,
     Button,
-    Modal,
-    Form,
-    Input,
-    Select,
     Space,
     Popconfirm,
     message,
     Card,
-    Row,
-    Col,
     Tag,
     Tooltip,
-    Divider,
     Switch,
-    Checkbox,
-    Tabs,
     Badge,
     Avatar
 } from 'antd';
@@ -26,18 +17,27 @@ import {
     EditOutlined,
     DeleteOutlined,
     EyeOutlined,
-    UserOutlined,
-    // ShieldCheckOutlined,
-    SettingOutlined,
     CrownOutlined,
     SafetyOutlined
 } from '@ant-design/icons';
 import { GoShieldCheck } from 'react-icons/go';
-
-const { Option } = Select;
-const { TextArea } = Input;
+import ToggleRolePermissionModal from './components/modals/ToggleRolePermissionModal';
+import httpClient from '../../../utils/HttpClient';
+import { DELETE_ROLES_URL, ROLES_URL, UPDATE_STATUS_ROLES_URL } from '../../../constants/Url';
+import { debounce } from 'lodash';
+import { objectToQuery } from '../../../utils/Utils';
+import "./RolesPermissionsPage.css";
 
 const RolesPermissionsCRUD = () => {
+    const defaultFilter = useMemo(() => {
+        return {
+            pageNo: 1,
+            pageSize: 10,
+        }
+    }, [])
+    const [loading, setLoading] = useState(true);
+    const [filter, setFilter] = useState(defaultFilter)
+    const [total, setTotal] = useState(0);
     const [roles, setRoles] = useState([
         {
             id: 1,
@@ -81,93 +81,99 @@ const RolesPermissionsCRUD = () => {
         }
     ]);
 
-    const [permissions] = useState([
-        { category: 'Users', permissions: ['users.create', 'users.read', 'users.update', 'users.delete'] },
-        { category: 'Events', permissions: ['events.create', 'events.read', 'events.update', 'events.delete'] },
-        { category: 'Tickets', permissions: ['tickets.create', 'tickets.read', 'tickets.update', 'tickets.delete'] },
-        { category: 'Roles', permissions: ['roles.create', 'roles.read', 'roles.update', 'roles.delete'] },
-        { category: 'Organizations', permissions: ['orgs.create', 'orgs.read', 'orgs.update', 'orgs.delete'] },
-    ]);
+    const toggleCategoriesModalRef = useRef(null);
 
-    const [isModalVisible, setIsModalVisible] = useState(false);
-    const [currentRole, setCurrentRole] = useState(null);
-    const [form] = Form.useForm();
+    const handleDelete = async (id) => {
+        try {
+            setLoading(true);
+            const res = await httpClient.delete(DELETE_ROLES_URL.replace(":id", id)).then(res => res.data)
+
+            if (res.status === 200) {
+                debounceFetchData()
+                message.success("Successfully deleted Roles.");
+            } else {
+                message.success("Failed to delete roles");
+                setLoading(false);
+            }
+        } catch (error) {
+            setLoading(false);
+            message.error("Failed to delete roles")
+        }
+    };
 
     const levelColors = {
-        system: '#722ed1',
+        // system: '#722ed1',
         admin: '#1890ff',
-        editor: '#52c41a',
-        support: '#faad14'
+        // editor: '#52c41a',
+        // support: '#faad14'
     };
 
     const levelIcons = {
-        system: <CrownOutlined />,
+        // system: <CrownOutlined />,
         admin: <GoShieldCheck />,
-        editor: <EditOutlined />,
-        support: <SafetyOutlined />
+        // editor: <EditOutlined />,
+        // support: <SafetyOutlined />
     };
 
-    const showModal = (role = null) => {
-        setCurrentRole(role);
-        setIsModalVisible(true);
+    const showModal = (role = null, mode) => {
         if (role) {
-            form.setFieldsValue({
-                name: role.name,
-                description: role.description,
-                status: role.status,
-                level: role.level,
-                permissions: role.permissions
-            });
+            toggleCategoriesModalRef.current?.openModal(role, mode);
         } else {
-            form.resetFields();
+            toggleCategoriesModalRef.current?.openModal({}, mode);
         }
     };
 
-    const handleSubmit = async () => {
+    const toggleStatus = async (id, status) => {
         try {
-            const values = await form.validateFields();
+            setLoading(true);
 
-            if (currentRole) {
-                // Update existing role
-                setRoles(prev => prev.map(role =>
-                    role.id === currentRole.id
-                        ? { ...role, ...values, updatedAt: new Date().toISOString().split('T')[0] }
-                        : role
-                ));
-                message.success('Role updated successfully!');
-            } else {
-                // Create new role
-                const newRole = {
-                    id: Date.now(),
-                    ...values,
-                    userCount: 0,
-                    createdAt: new Date().toISOString().split('T')[0]
-                };
-                setRoles(prev => [...prev, newRole]);
-                message.success('Role created successfully!');
+            const payload = {
+                status: status ? "active" : "inactive",
             }
 
-            setIsModalVisible(false);
-            form.resetFields();
-            setCurrentRole(null);
+            const res = await httpClient.put(UPDATE_STATUS_ROLES_URL.replace(":id", id), payload).then(res => res.data)
+
+            if (res.status === 200) {
+                debounceFetchData()
+                message.success('Role status updated!');
+            } else {
+                message.success("Failed to update status roles");
+                setLoading(false);
+            }
         } catch (error) {
-            message.error('Please fill in all required fields');
+            setLoading(false);
+            message.error("Failed to update status roles")
         }
     };
 
-    const handleDelete = (id) => {
-        setRoles(prev => prev.filter(role => role.id !== id));
-        message.success('Role deleted successfully!');
-    };
+    const fetchData = useCallback(async () => {
+        try {
+            setLoading(true);
 
-    const toggleStatus = (id) => {
-        setRoles(prev => prev.map(role =>
-            role.id === id
-                ? { ...role, status: role.status === 'active' ? 'inactive' : 'active' }
-                : role
-        ));
-        message.success('Role status updated!');
-    };
+            const res = await httpClient.get(objectToQuery(ROLES_URL, filter)).then(res => res.data); // Simulate fetching data from API
+
+            if (res.status === 200) {
+                setRoles(res.data);
+                setTotal(res.total)
+            } else {
+                setRoles([]);
+                setTotal(0)
+            }
+        } catch (error) {
+            setRoles([]);
+            setTotal(0)
+        } finally {
+            setLoading(false);
+        }
+    }, [filter]);
+
+    const debounceFetchData = useCallback(debounce(fetchData, 300), [fetchData])
+
+    useEffect(() => {
+        debounceFetchData()
+
+        return debounceFetchData.cancel
+    }, [debounceFetchData])
 
     const columns = [
         {
@@ -176,20 +182,23 @@ const RolesPermissionsCRUD = () => {
             key: 'name',
             render: (text, record) => (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <Avatar
-                        style={{
-                            backgroundColor: levelColors[record.level],
-                            color: 'white'
-                        }}
-                        icon={levelIcons[record.level]}
-                    />
+                    {
+                        record.superAdmin &&
+                        <Avatar
+                            style={{
+                                backgroundColor: levelColors["admin"],
+                                color: 'white'
+                            }}
+                            icon={levelIcons["admin"]}
+                        />
+                    }
                     <div>
                         <div style={{ fontWeight: 600, fontSize: '14px' }}>{text}</div>
-                        <div style={{ fontSize: '12px', color: '#64748b' }}>
-                            Level: <Tag color={levelColors[record.level]} size="small">
-                                {record.level.charAt(0).toUpperCase() + record.level.slice(1)}
+                        {/* <div style={{ fontSize: '12px', color: '#64748b' }}>
+                            Level: <Tag color={levelColors[record?.level]} size="small">
+                                {record?.level?.charAt(0)?.toUpperCase() + record?.level?.slice(1)}
                             </Tag>
-                        </div>
+                        </div> */}
                     </div>
                 </div>
             ),
@@ -214,22 +223,29 @@ const RolesPermissionsCRUD = () => {
         },
         {
             title: 'Permissions',
-            dataIndex: 'permissions',
+            dataIndex: 'associatedRights',
             key: 'permissions',
-            render: (permissions) => (
-                <Tooltip title={`${permissions.length} permissions assigned`}>
-                    <Tag color="blue">{permissions.length} permissions</Tag>
+            render: (associatedRights, record) => {
+                if (record?.superAdmin) {
+                    return <Tooltip title={`Full Access permissions assigned`}>
+                        <Tag color="blue">Full Access</Tag>
+                    </Tooltip>
+                }
+
+                return <Tooltip title={`${associatedRights?.length} permissions assigned`}>
+                    <Tag color="blue">{associatedRights?.length} permissions</Tag>
                 </Tooltip>
-            ),
+            },
         },
         {
             title: 'Status',
             dataIndex: 'status',
             key: 'status',
             render: (status, record) => (
+                !record.superAdmin &&
                 <Switch
                     checked={status === 'active'}
-                    onChange={() => toggleStatus(record.id)}
+                    onChange={() => toggleStatus(record._id, !(status === 'active'))}
                     checkedChildren="Active"
                     unCheckedChildren="Inactive"
                     style={{
@@ -248,12 +264,13 @@ const RolesPermissionsCRUD = () => {
             title: 'Actions',
             key: 'actions',
             render: (_, record) => (
+                !record.superAdmin &&
                 <Space>
                     <Tooltip title="View Details">
                         <Button
                             type="text"
                             icon={<EyeOutlined />}
-                            onClick={() => showModal(record)}
+                            onClick={() => showModal(record, "view")}
                             style={{ color: '#667eea' }}
                         />
                     </Tooltip>
@@ -261,14 +278,14 @@ const RolesPermissionsCRUD = () => {
                         <Button
                             type="text"
                             icon={<EditOutlined />}
-                            onClick={() => showModal(record)}
+                            onClick={() => showModal(record, "edit")}
                             style={{ color: '#52c41a' }}
                         />
                     </Tooltip>
                     <Popconfirm
                         title="Delete Role"
                         description="Are you sure you want to delete this role?"
-                        onConfirm={() => handleDelete(record.id)}
+                        onConfirm={() => handleDelete(record._id)}
                         okText="Yes"
                         cancelText="No"
                     >
@@ -284,140 +301,6 @@ const RolesPermissionsCRUD = () => {
             ),
         },
     ];
-
-
-    const renderRoleModal = () => (
-        <Modal
-            title={
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    {/* <ShieldCheckOutlined style={{ color: '#667eea' }} /> */}
-                    {currentRole ? 'Edit Role' : 'Create New Role'}
-                </div>
-            }
-            open={isModalVisible}
-            onOk={handleSubmit}
-            onCancel={() => {
-                setIsModalVisible(false);
-                form.resetFields();
-                setCurrentRole(null);
-            }}
-            width={800}
-            okText={currentRole ? 'Update Role' : 'Create Role'}
-            okButtonProps={{
-                style: {
-                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                    border: 'none'
-                }
-            }}
-        >
-            <Form
-                form={form}
-                layout="vertical"
-                initialValues={{ status: 'active', permissions: [] }}
-            >
-                <Row gutter={16}>
-                    <Col span={12}>
-                        <Form.Item
-                            name="name"
-                            label="Role Name"
-                            rules={[{ required: true, message: 'Please enter role name' }]}
-                        >
-                            <Input placeholder="Enter role name" prefix={<UserOutlined />} />
-                        </Form.Item>
-                    </Col>
-                    <Col span={12}>
-                        <Form.Item
-                            name="level"
-                            label="Role Level"
-                            rules={[{ required: true, message: 'Please select role level' }]}
-                        >
-                            <Select placeholder="Select role level">
-                                <Option value="system">
-                                    <Space>
-                                        <CrownOutlined style={{ color: levelColors.system }} />
-                                        System Level
-                                    </Space>
-                                </Option>
-                                <Option value="admin">
-                                    <Space>
-                                        {/* <ShieldCheckOutlined style={{ color: levelColors.admin }} /> */}
-                                        Admin Level
-                                    </Space>
-                                </Option>
-                                <Option value="editor">
-                                    <Space>
-                                        <EditOutlined style={{ color: levelColors.editor }} />
-                                        Editor Level
-                                    </Space>
-                                </Option>
-                                <Option value="support">
-                                    <Space>
-                                        <SafetyOutlined style={{ color: levelColors.support }} />
-                                        Support Level
-                                    </Space>
-                                </Option>
-                            </Select>
-                        </Form.Item>
-                    </Col>
-                </Row>
-
-                <Form.Item
-                    name="description"
-                    label="Description"
-                    rules={[{ required: true, message: 'Please enter description' }]}
-                >
-                    <TextArea rows={3} placeholder="Describe the role and its purpose" />
-                </Form.Item>
-
-                <Form.Item
-                    name="status"
-                    label="Status"
-                >
-                    <Select>
-                        <Option value="active">Active</Option>
-                        <Option value="inactive">Inactive</Option>
-                    </Select>
-                </Form.Item>
-
-                <Form.Item
-                    name="permissions"
-                    label="Permissions"
-                    rules={[{ required: true, message: 'Please select at least one permission' }]}
-                >
-                    <div style={{
-                        maxHeight: '300px',
-                        overflowY: 'auto',
-                        border: '1px solid #d9d9d9',
-                        borderRadius: '6px',
-                        padding: '12px'
-                    }}>
-                        {permissions.map((category) => (
-                            <div key={category.category}>
-                                <Divider orientation="left" orientationMargin={0}>
-                                    <span style={{ color: '#667eea', fontWeight: 600 }}>
-                                        {category.category}
-                                    </span>
-                                </Divider>
-                                <Checkbox.Group style={{ width: '100%', marginBottom: '16px' }}>
-                                    <Row>
-                                        {category.permissions.map((perm) => (
-                                            <Col span={12} key={perm} style={{ marginBottom: '8px' }}>
-                                                <Checkbox value={perm}>
-                                                    <span style={{ fontSize: '13px' }}>
-                                                        {perm.split('.')[1]?.toUpperCase()} {perm.split('.')[0]}
-                                                    </span>
-                                                </Checkbox>
-                                            </Col>
-                                        ))}
-                                    </Row>
-                                </Checkbox.Group>
-                            </div>
-                        ))}
-                    </div>
-                </Form.Item>
-            </Form>
-        </Modal>
-    );
 
     return (
         <div style={{ padding: '0' }}>
@@ -437,7 +320,7 @@ const RolesPermissionsCRUD = () => {
                     <Button
                         type="primary"
                         icon={<PlusOutlined />}
-                        onClick={() => showModal()}
+                        onClick={() => showModal({}, "create")}
                         style={{
                             background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                             border: 'none',
@@ -452,18 +335,35 @@ const RolesPermissionsCRUD = () => {
                     <Table
                         columns={columns}
                         dataSource={roles}
+                        loading={loading}
                         rowKey="id"
                         pagination={{
-                            pageSize: 10,
+                            pageSize: filter.pageSize,
+                            current: filter.pageNo,
                             showSizeChanger: true,
                             showQuickJumper: true,
+                            total: total,
+                            onChange: (page, pageSize) => {
+                                // Fetch data for the selected page
+                                setFilter(pre => {
+                                    debounceFetchData({ ...pre, pageNo: page, pageSize });
+                                    return ({ ...pre, pageNo: page, pageSize })
+                                });
+                            },
                             showTotal: (total, range) =>
                                 `${range[0]}-${range[1]} of ${total} roles`,
                         }}
                     />
                 </Card>
             </div>
-            {renderRoleModal()}
+            <ToggleRolePermissionModal
+                ref={toggleCategoriesModalRef}
+                fetchData={async () => {
+                    await Promise.all([
+                        debounceFetchData()
+                    ])
+                }}
+            />
         </div>
     );
 };

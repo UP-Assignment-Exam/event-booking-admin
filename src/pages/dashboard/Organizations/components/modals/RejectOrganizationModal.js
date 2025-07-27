@@ -35,6 +35,7 @@ function RejectOrganizationModal(props, ref) {
           if (res.status === 200) {
             debounceFetchData();
             message.success(`${record.organizationName} has been rejected successfully`);
+            onClose();
           } else {
             message.error(`Failed to rejected ${record.organizationName}`);
           }
@@ -43,7 +44,6 @@ function RejectOrganizationModal(props, ref) {
           message.error(`Failed to rejected ${record.organizationName}`);
         } finally {
           setLoading(false);
-          onClose();
         }
       },
     });

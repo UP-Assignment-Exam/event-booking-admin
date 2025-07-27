@@ -31,6 +31,7 @@ function ToggleEventTicketModal(props, ref) {
                 if (res.status === 200) {
                     message.success('Ticket Type created successfully!');
                     props.fetchData(); // Refresh data after creation
+                    onClose();
                 } else {
                     message.error(res.message || 'Failed to create ticket type');
                 }
@@ -41,6 +42,7 @@ function ToggleEventTicketModal(props, ref) {
                 if (res.status === 200) {
                     message.success('Ticket Type updated successfully!');
                     props.fetchData(); // Refresh data after creation
+                    onClose();
                 } else {
                     message.error(res.message || 'Failed to update ticket type');
                 }
@@ -50,7 +52,6 @@ function ToggleEventTicketModal(props, ref) {
             message.error('Failed to save ticket type. Please try again.');
         } finally {
             setLoading(false);
-            onClose();
         }
     }
 

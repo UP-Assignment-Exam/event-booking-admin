@@ -18,7 +18,6 @@ import {
   message,
   Button,
   Tooltip,
-  Badge,
   Avatar,
   Progress,
   Descriptions
@@ -31,11 +30,8 @@ import {
   PercentageOutlined,
   DollarOutlined,
   ClockCircleOutlined,
-  FireOutlined,
-  StarOutlined,
   ClearOutlined,
   ReloadOutlined,
-  CalendarOutlined,
   EyeOutlined,
   DeleteOutlined,
   EditOutlined,
@@ -307,14 +303,21 @@ export default function PromocodePage() {
   };
 
   return (
-    <div style={{ padding: '24px', maxHeight: 'calc(100vh - 140px)', overflow: 'auto', background: 'rgba(24, 144, 255, 0.02)', minHeight: '100vh' }}>
+    <div>
       {/* Header */}
       <div style={{ marginBottom: '24px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-          <Title level={2} style={{ margin: 0, color: 'white' }}>
-            <GiftOutlined style={{ marginRight: '8px' }} />
-            Promo Code
-          </Title>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '16px'
+        }}>
+          <div>
+            <h3 style={{ margin: 0, color: '#667eea' }}>Promo Code</h3>
+            <p style={{ margin: '4px 0 0 0', color: '#64748b' }}>
+              View and manage your available promo codes.
+            </p>
+          </div>
           <Space>
             <Button icon={<PlusOutlined />} type="primary" size="large">
               Create New

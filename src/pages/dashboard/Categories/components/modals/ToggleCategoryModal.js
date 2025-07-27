@@ -34,6 +34,7 @@ function ToggleCategoryModal(props, ref) {
                 if (res.status === 200) {
                     message.success('Category created successfully!');
                     props.fetchData(); // Refresh data after creation
+                    onClose();
                 } else {
                     message.error(res.message || 'Failed to create Category');
                 }
@@ -44,6 +45,7 @@ function ToggleCategoryModal(props, ref) {
                 if (res.status === 200) {
                     message.success('Category updated successfully!');
                     props.fetchData(); // Refresh data after creation
+                    onClose();
                 } else {
                     message.error(res.message || 'Failed to update category');
                 }
@@ -53,7 +55,6 @@ function ToggleCategoryModal(props, ref) {
             message.error('Failed to save category. Please try again.');
         } finally {
             setLoading(false);
-            onClose();
         }
     }
 

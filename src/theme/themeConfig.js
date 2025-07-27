@@ -26,24 +26,24 @@ export const lightTheme = {
     colorWarning: brandColors.warning,
     colorError: brandColors.error,
     colorInfo: brandColors.info,
-    
+
     // Background Colors
     colorBgContainer: 'rgba(255, 255, 255, 0.95)',
     colorBgElevated: 'rgba(255, 255, 255, 0.98)',
     colorBgLayout: 'transparent',
     colorBgSpotlight: 'rgba(255, 255, 255, 0.9)',
     colorBgMask: 'rgba(0, 0, 0, 0.45)',
-    
+
     // Text Colors
     colorText: '#2c3e50',
     colorTextSecondary: '#64748b',
     colorTextTertiary: '#94a3b8',
     colorTextQuaternary: '#cbd5e1',
-    
+
     // Border Colors
     colorBorder: 'rgba(255, 255, 255, 0.2)',
     colorBorderSecondary: 'rgba(255, 255, 255, 0.1)',
-    
+
     // Typography
     fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
     fontSize: 14,
@@ -52,17 +52,17 @@ export const lightTheme = {
     fontSizeHeading3: 18,
     fontSizeHeading4: 16,
     fontSizeHeading5: 14,
-    
+
     // Layout
     borderRadius: 8,
     borderRadiusLG: 12,
     borderRadiusSM: 6,
-    
+
     // Shadows
     boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
     boxShadowSecondary: '0 4px 12px rgba(0, 0, 0, 0.15)',
     boxShadowTertiary: '0 8px 32px rgba(0, 0, 0, 0.1)',
-    
+
     // Motion
     motionDurationSlow: '0.3s',
     motionDurationMid: '0.2s',
@@ -167,6 +167,16 @@ export const lightTheme = {
       colorBgElevated: 'rgba(255, 255, 255, 0.95)',
       colorBgMask: 'rgba(0, 0, 0, 0.45)',
     },
+    Checkbox: {
+      colorPrimary: brandColors.primary,
+      colorPrimaryHover: brandColors.primaryHover,
+      colorBgContainer: 'rgba(255, 255, 255, 0.8)',
+      colorBorder: 'rgb(217, 217, 217)', // default
+      controlInteractiveSize: 16,
+      lineWidth: 1,
+      lineType: 'solid',
+      colorError: brandColors.error, // used by status="error"
+    }
   }
 };
 
@@ -182,24 +192,24 @@ export const darkTheme = {
     colorWarning: brandColors.warning,
     colorError: brandColors.error,
     colorInfo: brandColors.info,
-    
+
     // Background Colors
     colorBgContainer: 'rgba(30, 30, 45, 0.95)',
     colorBgElevated: 'rgba(30, 30, 45, 0.98)',
     colorBgLayout: 'transparent',
     colorBgSpotlight: 'rgba(30, 30, 45, 0.9)',
     colorBgMask: 'rgba(0, 0, 0, 0.65)',
-    
+
     // Text Colors
     colorText: '#ffffff',
     colorTextSecondary: '#a0a0a0',
     colorTextTertiary: '#8a8a8a',
     colorTextQuaternary: '#666666',
-    
+
     // Border Colors
     colorBorder: 'rgba(102, 126, 234, 0.3)',
     colorBorderSecondary: 'rgba(102, 126, 234, 0.2)',
-    
+
     // Typography (same as light)
     fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
     fontSize: 14,
@@ -208,17 +218,17 @@ export const darkTheme = {
     fontSizeHeading3: 18,
     fontSizeHeading4: 16,
     fontSizeHeading5: 14,
-    
+
     // Layout
     borderRadius: 8,
     borderRadiusLG: 12,
     borderRadiusSM: 6,
-    
+
     // Shadows
     boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
     boxShadowSecondary: '0 4px 12px rgba(0, 0, 0, 0.4)',
     boxShadowTertiary: '0 8px 32px rgba(0, 0, 0, 0.2)',
-    
+
     // Motion (same as light)
     motionDurationSlow: '0.3s',
     motionDurationMid: '0.2s',
@@ -326,16 +336,21 @@ export const darkTheme = {
       colorBgElevated: 'rgba(30, 30, 45, 0.95)',
       colorBgMask: 'rgba(0, 0, 0, 0.65)',
     },
-    Checkbox: {
-      colorPrimary: brandColors.primary,
-      colorBgContainer: 'rgba(30, 30, 45, 0.8)',
-      colorBorder: 'rgba(102, 126, 234, 0.3)',
-    },
     Dropdown: {
       colorBgElevated: 'rgba(30, 30, 45, 0.95)',
       controlItemBgHover: 'rgba(102, 126, 234, 0.1)',
       controlItemBgActive: 'rgba(102, 126, 234, 0.15)',
-    }
+    },
+    Checkbox: {
+      colorPrimary: brandColors.primary,
+      colorPrimaryHover: brandColors.primaryHover,
+      colorBgContainer: 'rgba(30, 30, 45, 0.8)',
+      colorBorder: 'rgba(102, 126, 234, 0.3)',
+      controlInteractiveSize: 16,
+      lineWidth: 1,
+      lineType: 'solid',
+      colorError: brandColors.error,
+    },
   }
 };
 

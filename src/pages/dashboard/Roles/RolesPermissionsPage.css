@@ -1,0 +1,3 @@
+:where(.ant-input-status-error) .ant-checkbox-inner {
+    border-color: #ff4d4f !important;
+}

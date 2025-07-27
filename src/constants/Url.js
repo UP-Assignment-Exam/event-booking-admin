@@ -24,6 +24,18 @@ export const CREATE_CATEGORIES_URL = "/categories";
 export const UPDATE_CATEGORIES_URL = "/categories/:id";
 export const DELETE_CATEGORIES_URL = "/categories/:id";
 
+export const ROLES_URL = "/roles";
+export const CREATE_ROLES_URL = "/roles";
+export const UPDATE_ROLES_URL = "/roles/:id";
+export const UPDATE_STATUS_ROLES_URL = "/roles/status/:id";
+export const DELETE_ROLES_URL = "/roles/:id";
+
+export const PAYMENT_METHODS_URL = "/payment-methods";
+export const CREATE_PAYMENT_METHODS_URL = "/payment-methods";
+export const UPDATE_PAYMENT_METHODS_URL = "/payment-methods/:id";
+export const UPDATE_STATUS_PAYMENT_METHODS_URL = "/payment-methods/status/:id";
+export const DELETE_PAYMENT_METHODS_URL = "/payment-methods/:id";
+
 export const BASE_URL = "/assets/images";
 export const BASE_FILE_URL = "/assets/files";
 

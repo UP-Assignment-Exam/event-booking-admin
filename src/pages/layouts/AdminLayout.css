@@ -287,6 +287,10 @@
     transition: all 0.3s ease !important;
 }
 
+.light-theme .sidebar-menu .ant-menu-item-selected {
+    color: white !important;
+}
+
 .light-theme .sidebar-menu .ant-menu-submenu-title {
     border-radius: 8px !important;
     margin: 4px 8px !important;

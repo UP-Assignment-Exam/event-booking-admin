@@ -24,6 +24,7 @@ import ToggleCategoryModal from './components/modals/ToggleCategoryModal';
 import { debounce } from 'lodash';
 import { CATEGORIES_URL, DELETE_CATEGORIES_URL } from '../../../constants/Url';
 import httpClient from '../../../utils/HttpClient';
+import { objectToQuery } from '../../../utils/Utils';
 
 const CategoryPage = () => {
     const defaultFilter = useMemo(() => {
@@ -111,7 +112,7 @@ const CategoryPage = () => {
         try {
             setLoading(true);
 
-            const res = await httpClient.get(CATEGORIES_URL).then(res => res.data); // Simulate fetching data from API
+            const res = await httpClient.get(objectToQuery(CATEGORIES_URL, filter)).then(res => res.data); // Simulate fetching data from API
 
             if (res.status === 200) {
                 setCategories(res.data);
@@ -126,7 +127,7 @@ const CategoryPage = () => {
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [filter]);
 
     const debounceFetchData = useCallback(debounce(fetchData, 300), [fetchData])
 
@@ -153,9 +154,6 @@ const CategoryPage = () => {
                     />
                     <div>
                         <div style={{ fontWeight: 600, fontSize: '14px' }}>{text}</div>
-                        <div style={{ fontSize: '12px', color: '#64748b' }}>
-                            ID: <Tag size="small">#{record.id}</Tag>
-                        </div>
                     </div>
                 </div>
             ),

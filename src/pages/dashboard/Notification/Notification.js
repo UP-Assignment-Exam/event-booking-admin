@@ -21,7 +21,6 @@ import {
   Avatar
 } from 'antd';
 import {
-  BellOutlined,
   CheckOutlined,
   ExclamationCircleOutlined,
   InfoCircleOutlined,
@@ -182,7 +181,7 @@ export default function Notification() {
     const date = new Date(timestamp);
     const now = new Date();
     const diffInHours = Math.floor((now - date) / (1000 * 60 * 60));
-    
+
     if (diffInHours < 1) return 'Just now';
     if (diffInHours < 24) return `${diffInHours}h ago`;
     if (diffInHours < 168) return `${Math.floor(diffInHours / 24)}d ago`;
@@ -191,7 +190,7 @@ export default function Notification() {
 
   // Mark notification as read
   const markAsRead = (notificationId) => {
-    setNotifications(prev => 
+    setNotifications(prev =>
       prev.map(n => n.id === notificationId ? { ...n, read: true } : n)
     );
   };
@@ -223,22 +222,32 @@ export default function Notification() {
   // Filter notifications
   const filteredNotifications = notifications.filter(notification => {
     const matchesSearch = notification.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         notification.message.toLowerCase().includes(searchTerm.toLowerCase());
+      notification.message.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesType = filterType === 'all' || notification.type === filterType;
     const matchesCategory = filterCategory === 'all' || notification.category === filterCategory;
-    const matchesTab = activeTab === 'all' || 
-                      (activeTab === 'unread' && !notification.read) ||
-                      (activeTab === 'read' && notification.read);
+    const matchesTab = activeTab === 'all' ||
+      (activeTab === 'unread' && !notification.read) ||
+      (activeTab === 'read' && notification.read);
 
     return matchesSearch && matchesType && matchesCategory && matchesTab;
   });
 
   return (
-    <div style={{ padding: '24px', maxHeight: 'calc(100vh - 140px)', overflow: 'auto', backgroundColor: 'rgba(24, 144, 255, 0.02)', minHeight: '100vh' }}>
+    <div>
       {/* Header */}
       <div style={{ marginBottom: '24px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-          <Title level={2} style={{ margin: 0 }}>Notifications</Title>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '16px'
+        }}>
+          <div>
+            <h3 style={{ margin: 0, color: '#667eea' }}>Notifications</h3>
+            <p style={{ margin: '4px 0 0 0', color: '#64748b' }}>
+              View your latest notifications and updates.
+            </p>
+          </div>
           <Space>
             <Button icon={<ReloadOutlined />} onClick={() => message.success('Notifications refreshed')}>
               Refresh
@@ -261,21 +270,21 @@ export default function Notification() {
           </Col>
           <Col xs={6}>
             <Card>
-              <Statistic 
-                title="Unread" 
-                value={notificationStats.unread} 
+              <Statistic
+                title="Unread"
+                value={notificationStats.unread}
                 valueStyle={{ color: '#1890ff' }}
-                prefix={<MailOutlined />} 
+                prefix={<MailOutlined />}
               />
             </Card>
           </Col>
           <Col xs={6}>
             <Card>
-              <Statistic 
-                title="Critical" 
-                value={notificationStats.critical} 
+              <Statistic
+                title="Critical"
+                value={notificationStats.critical}
                 valueStyle={{ color: '#ff4d4f' }}
-                prefix={<ExclamationCircleOutlined />} 
+                prefix={<ExclamationCircleOutlined />}
               />
             </Card>
           </Col>
@@ -465,11 +474,11 @@ export default function Notification() {
                 </Tag>
               </Space>
             </div>
-            
+
             <Paragraph>{selectedNotification.message}</Paragraph>
-            
+
             <Divider />
-            
+
             <Row gutter={16}>
               <Col span={12}>
                 <Text strong>From:</Text>
@@ -493,7 +502,7 @@ export default function Notification() {
                 </div>
               </Col>
             </Row>
-            
+
             <div style={{ marginTop: '16px' }}>
               <Text strong>Timestamp:</Text>
               <div style={{ marginTop: '4px' }}>
