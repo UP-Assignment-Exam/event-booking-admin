@@ -73,6 +73,8 @@ export const DASHBOARD_RECENT_EVENT_URL = "/dashboards/recent-event";
 export const UPDATE_PROFILE_URL = "/users/profile";
 export const CHANGE_PROFILE_PASSWORD_URL= "/profile/change-password";
 
+export const PING_URL = "/ping";
+
 export const BASE_URL = "/assets/images";
 export const BASE_FILE_URL = "/assets/files";
 

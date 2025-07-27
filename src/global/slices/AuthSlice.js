@@ -18,11 +18,11 @@ const authSlice = createSlice({
       localStorage.setItem('token', action.payload.token);
     },
     logout: (state) => {
-      state.user = null;
-      state.token = null;
-
       localStorage.removeItem('user');
       localStorage.removeItem('token');
+      
+      // Redirect to login
+      window.location.href = '/login';
     },
     updateProfile: (state, action) => {
       state.user = {

@@ -31,6 +31,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { toggleTheme } from '../../global/slices/ThemeSlice';
 import { AiOutlineBank } from 'react-icons/ai';
 import { findParentKey } from '../../utils/Utils';
+import { logout } from '../../global/slices/AuthSlice';
 
 const { Header, Sider, Content } = Layout;
 
@@ -88,7 +89,7 @@ const AdminLayout = () => {
         },
         {
             key: 'promocodes',
-            icon: <DiscordOutlined/>,
+            icon: <DiscordOutlined />,
             label: 'Promocodes'
         }
     ], []);
@@ -163,21 +164,20 @@ const AdminLayout = () => {
         console.log('Selected menu:', key);
         setSelectedKeys([key]);
 
-         if (key === 'notification') {
-        navigate('/notification');
-    }
+        if (key === 'notification') {
+            navigate('/notification');
+        }
     };
 
     const handleUserMenuClick = ({ key }) => {
         if (key === 'logout') {
-            navigate(`/login`);
-            console.log('Logging out...');
+            dispatch(logout());
         } else {
             navigate(`/${key}`);
             console.log('User menu action:', key);
         }
     };
-    
+
 
     const toggleDarkMode = (checked) => {
         setDarkMode(checked);

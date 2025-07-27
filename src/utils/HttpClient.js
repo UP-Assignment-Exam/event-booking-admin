@@ -11,6 +11,29 @@ const httpClient = axios.create({
   },
 });
 
+httpClient.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = token;
+    }
+    return config;
+  },
+  (error) => {
+    if (error.response?.status === 401) {
+      // Clear token/user if needed
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+
+      // Redirect to login
+      window.location.href = '/login';
+    }
+
+    return Promise.reject(error);
+  },
+);
+
+
 httpClient.interceptors.response.use(
   (response) => {
     return response;
