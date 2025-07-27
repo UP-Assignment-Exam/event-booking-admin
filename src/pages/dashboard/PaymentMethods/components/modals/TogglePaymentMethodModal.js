@@ -13,7 +13,7 @@ import {
     Image
 } from 'antd';
 import httpClient from '../../../../../utils/HttpClient';
-import { CREATE_PAYMENT_METHODS_URL, PAYMENT_METHODS_URL, UPDATE_PAYMENT_METHODS_URL } from '../../../../../constants/Url';
+import { CREATE_PAYMENT_METHODS_URL, UPDATE_PAYMENT_METHODS_URL } from '../../../../../constants/Url';
 import { extractErrorMessage } from '../../../../../utils/Utils';
 import UploadComponent from "../../../../../components/uploads/UploadComponent";
 

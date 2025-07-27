@@ -1,11 +1,64 @@
 import { CloseOutlined } from '@ant-design/icons';
-import { Button, Form, Input, message, Modal, Typography } from 'antd'
+import { Button, Form, message, Modal, Select, Typography } from 'antd'
 import React, { forwardRef, useImperativeHandle, useState } from 'react'
 import httpClient from '../../../../../utils/HttpClient';
 import { UPDATE_ORGANIZATION_REQUESTS_URL } from '../../../../../constants/Url';
 
 const { Text } = Typography;
-const { TextArea } = Input;
+const { Option } = Select;
+
+const rejectionReasons = {
+  'incomplete_documentation': {
+    title: 'Incomplete Documentation',
+    description: 'Required documentation or information is missing from your application.',
+    details: 'Please ensure all required documents, certificates, and forms are properly submitted and complete.'
+  },
+  'verification_failed': {
+    title: 'Verification Process Failed',
+    description: 'We were unable to verify your organization\'s credentials or legal status.',
+    details: 'Please provide valid business registration, tax documents, or other required verification materials.'
+  },
+  'insufficient_experience': {
+    title: 'Insufficient Experience',
+    description: 'Your organization does not meet our minimum experience requirements.',
+    details: 'We require organizers to have demonstrable experience in event management or related fields.'
+  },
+  'policy_compliance': {
+    title: 'Policy Compliance Issues',
+    description: 'Your organization or application does not meet our platform policies.',
+    details: 'Please review our organizer guidelines and ensure full compliance with all requirements.'
+  },
+  'financial_requirements': {
+    title: 'Financial Requirements Not Met',
+    description: 'Your organization does not meet our financial stability or insurance requirements.',
+    details: 'Valid business insurance, financial statements, or bonding may be required for approval.'
+  },
+  'capacity_concerns': {
+    title: 'Capacity and Resource Concerns',
+    description: 'We have concerns about your organization\'s capacity to manage events effectively.',
+    details: 'This may include staffing, technical capabilities, or operational infrastructure concerns.'
+  },
+  'reputation_issues': {
+    title: 'Reputation or Background Issues',
+    description: 'Background checks or reputation research raised concerns about your organization.',
+    details: 'This decision is based on our due diligence process and platform safety requirements.'
+  },
+  'market_saturation': {
+    title: 'Market Saturation',
+    description: 'We currently have sufficient organizers in your category or geographic area.',
+    details: 'We may reconsider your application when market conditions change or demand increases.'
+  },
+  'application_quality': {
+    title: 'Application Quality Issues',
+    description: 'Your application did not meet our quality standards or was incomplete.',
+    details: 'Please provide more detailed information about your organization, experience, and event planning capabilities.'
+  },
+  'other': {
+    title: 'Other Reason',
+    description: 'Your application was rejected for reasons not covered by standard categories.',
+    details: 'Please see additional notes below or contact support for more information.'
+  }
+};
 
 function RejectOrganizationModal(props, ref) {
   const { debounceFetchData } = props;
@@ -87,16 +140,18 @@ function RejectOrganizationModal(props, ref) {
               </div>
             </div>
 
-
             <Form.Item
               name="reason"
               label="Rejection Reason"
-              rules={[{ required: true, message: 'Please provide a reason for rejection' }]}
+              rules={[{ required: true, message: 'Please select a reason for rejection' }]}
             >
-              <TextArea
-                rows={4}
-                placeholder="Please explain why this request is being rejected..."
-              />
+              <Select placeholder="Select a rejection reason">
+                {Object.entries(rejectionReasons).map(([key, value]) => (
+                  <Option key={key} value={key}>
+                    {value.title}
+                  </Option>
+                ))}
+              </Select>
             </Form.Item>
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>

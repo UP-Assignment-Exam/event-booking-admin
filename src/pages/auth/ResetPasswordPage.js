@@ -1,33 +1,107 @@
-import { Form, Input, Button, message } from 'antd';
-import { useEffect, useState } from 'react';
+import { Form, Input, Button, message, Spin } from 'antd';
+import { useCallback, useEffect, useState } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { LockOutlined, CheckCircleOutlined, ArrowRightOutlined } from '@ant-design/icons';
+import httpClient from '../../utils/HttpClient';
+import { AUTH_RESET_PASSWORD_URL, AUTH_VERIFY_TOKEN_URL } from '../../constants/Url';
+import { extractErrorMessage, objectToQuery } from '../../utils/Utils';
+import { debounce } from 'lodash';
 
 export default function ResetPasswordPage() {
   const location = useLocation();
+  const [loading, setLoading] = useState(true);
   const [token, setToken] = useState('');
   const [email, setEmail] = useState('');
   const [valid, setValid] = useState(false);
   const [resetSuccess, setResetSuccess] = useState(false);
+  const [submitLoading, setSubmitLoading] = useState(false);
+
+
+  const verifyToken = useCallback(async () => {
+    try {
+      setLoading(true);
+
+      const query = new URLSearchParams(location.search);
+      const tokenParam = query.get('token');
+      const emailParam = query.get('email');
+
+      const res = await httpClient.get(objectToQuery(AUTH_VERIFY_TOKEN_URL, {
+        token: tokenParam,
+        email: emailParam
+      })).then(res => res.data)
+
+      if (res.status === 200) {
+        setToken(tokenParam);
+        setEmail(emailParam);
+        setValid(true);
+      } else {
+        message.error(res?.message);
+        setValid(false);
+      }
+    } catch (error) {
+      message.error(extractErrorMessage(error) || "Interal Server Error!");
+      setValid(false);
+    } finally {
+      setLoading(false);
+    }
+
+  }, [location.search])
+
+  const debounceVerifyToken = useCallback(debounce(verifyToken, 300), [verifyToken]);
 
   useEffect(() => {
-    const query = new URLSearchParams(location.search);
-    const tokenParam = query.get('token');
-    const emailParam = query.get('email');
+    debounceVerifyToken()
 
-    if (tokenParam && emailParam) {
-      setToken(tokenParam);
-      setEmail(emailParam);
-      setValid(true);
+    return debounceVerifyToken.cancel
+  }, [debounceVerifyToken])
+
+  const handleReset = async (values) => {
+    try {
+      setSubmitLoading(true);
+
+      const res = await httpClient.post(AUTH_RESET_PASSWORD_URL, {
+        newPassword: values?.password,
+        token: token, 
+        email: email
+      }).then(res => res.data)
+
+      if (res.status === 200) {
+        setResetSuccess(true);
+        message.success('Password reset successfully!');
+      } else {
+        message.error(res?.message);
+      }
+    } catch (error) {
+      message.error(extractErrorMessage(error) || "Interal Server Error!");
+    } finally {
+      setSubmitLoading(false);
     }
-  }, [location.search]);
-
-  const handleReset = (values) => {
-    // Replace with your API call
-    console.log('Resetting password for:', email, 'Token:', token, 'New password:', values.password);
-    setResetSuccess(true);
-    message.success('Password reset successfully!');
   };
+
+
+  if (loading) {
+    return (
+      <div className="p-4 reset-password-form text-center">
+        {/* Logo and Title */}
+        <div className="text-center mb-4">
+          <div className="logo-container">
+            <img
+              src="/logo.png"
+              alt="Logo"
+              className='logo'
+            />
+          </div>
+          <h1 className="form-title">Set New Password</h1>
+          <p className="form-subtitle">
+            Verifying reset link for <strong className="email-highlight">{email}</strong>
+          </p>
+        </div>
+
+        <Spin size="large" />
+      </div>
+    );
+  }
+
 
   if (!valid) {
     return (
@@ -158,6 +232,7 @@ export default function ResetPasswordPage() {
               block
               size="large"
               className="modern-submit-btn"
+              loading={submitLoading}
             >
               <span>Reset Password</span>
               <ArrowRightOutlined className="submit-icon" />

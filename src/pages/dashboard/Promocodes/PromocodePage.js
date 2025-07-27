@@ -13,14 +13,12 @@ import {
   Statistic,
   Input,
   Select,
-  Tabs,
   Modal,
   message,
   Button,
   Tooltip,
   Avatar,
   Progress,
-  Descriptions,
   Popconfirm,
   Spin
 } from 'antd';
@@ -29,8 +27,6 @@ import {
   CopyOutlined,
   CheckOutlined,
   ExclamationCircleOutlined,
-  PercentageOutlined,
-  DollarOutlined,
   ClockCircleOutlined,
   ClearOutlined,
   ReloadOutlined,
@@ -38,7 +34,6 @@ import {
   DeleteOutlined,
   EditOutlined,
   PlusOutlined,
-  ShareAltOutlined
 } from '@ant-design/icons';
 import TogglePromoCodeModal from './components/modals/TogglePromoCodeModal';
 import { debounce } from 'lodash';
@@ -50,7 +45,6 @@ import ViewPromoCodeModal from './components/modals/ViewPromoCodeModal';
 const { Title, Text, Paragraph } = Typography;
 const { Search } = Input;
 const { Option } = Select;
-const { TabPane } = Tabs;
 
 // Mock promo code data
 const mockPromoCodes = [

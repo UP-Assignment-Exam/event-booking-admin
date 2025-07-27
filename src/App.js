@@ -25,6 +25,7 @@ import ProfilePage from './pages/dashboard/Profiles/ProfilePage';
 import SettingPage from './pages/dashboard/Settings/SettingPage';
 import Notification from './pages/dashboard/Notification/Notification';
 import PromocodePage from './pages/dashboard/Promocodes/PromocodePage';
+import UserManagementPage from './pages/dashboard/Users/UserPage';
 
 
 function App() {
@@ -47,6 +48,7 @@ function App() {
           <Route path='/Event' index element={<Event />} />
           <Route path='/Customer' index element={<Customer />} />
           <Route path='/promocodes' element={<PromocodePage/>}/>
+          <Route path='/users' element={<UserManagementPage/>}/>
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Route>
