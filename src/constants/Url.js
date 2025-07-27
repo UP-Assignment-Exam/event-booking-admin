@@ -18,11 +18,13 @@ export const ORGANIZATIONS_STATIC_URL = "/organizations/statistics";
 
 export const RIGHT_PERMISSIONS_URL = "/rights/permissions";
 
+export const GET_ALL_TICKET_TYPES_URL = "/ticket-types/all";
 export const TICKET_TYPES_URL = "/ticket-types";
 export const CREATE_TICKET_TYPES_URL = "/ticket-types";
 export const UPDATE_TICKET_TYPES_URL = "/ticket-types/:id";
 export const DELETE_TICKET_TYPES_URL = "/ticket-types/:id";
 
+export const GET_ALL_CATEGORIES_URL = "/categories/all";
 export const CATEGORIES_URL = "/categories";
 export const CREATE_CATEGORIES_URL = "/categories";
 export const UPDATE_CATEGORIES_URL = "/categories/:id";
@@ -55,6 +57,18 @@ export const USERS_STATIC_URL = '/users/statistics';
 export const DELETE_USER_URL = '/users/:id';
 export const UPDATE_USERS_URL = '/users/:id';
 export const UPDATE_USER_STATUS_URL = '/users/status/:id';
+
+export const EVENTS_STATIC_URL = '/events/statistics';
+export const EVENTS_URL = '/events';
+export const CREATE_EVENTS_URL = "/events";
+export const UPDATE_EVENTS_URL = '/events/:id';
+// export const USERS_STATIC_URL = '/users/statistics';
+export const DELETE_EVENTS_URL = '/events/:id';
+export const UPDATE_EVENTS_PURCHASE_URL = '/events/purchase/:id';
+export const UPDATE_EVENTS_STATUS_URL = '/events/status/:id';
+
+export const DASHBOARD_STATIC_URL = "/dashboards/statistics";
+export const DASHBOARD_RECENT_EVENT_URL = "/dashboards/recent-event";
 
 export const BASE_URL = "/assets/images";
 export const BASE_FILE_URL = "/assets/files";

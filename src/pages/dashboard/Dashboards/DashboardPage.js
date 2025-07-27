@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
     Layout,
     Menu,
@@ -26,7 +26,8 @@ import {
     ConfigProvider,
     theme,
     Popconfirm,
-    message
+    message,
+    Spin
 } from 'antd';
 import {
     DashboardOutlined,
@@ -52,23 +53,31 @@ import {
     TeamOutlined,
     ShoppingOutlined
 } from '@ant-design/icons';
+import httpClient from '../../../utils/HttpClient';
+import { DASHBOARD_RECENT_EVENT_URL, DASHBOARD_STATIC_URL } from '../../../constants/Url';
+import { debounce } from 'lodash';
 
-const { Header, Sider, Content } = Layout;
 const { Title, Text } = Typography;
 const { Option } = Select;
 
 export default function DashboardPage() {
+    const defaultStatic = useMemo(() => ({
+        totalEvents: 0,
+        activeUsers: 0,
+        totalRevenue: 0,
+        ticketsSold: 0
+    }), []);
+
     const { token } = theme.useToken(); // gets the current theme tokens
     const [isModalVisible, setIsModalVisible] = useState(false);
-    // Sample dashboard data
-    const [dashboardStats] = useState({
-        totalEvents: 127,
-        activeUsers: 2840,
-        totalRevenue: 45670,
-        ticketsSold: 8943
+    const [loading, setLoading] = useState({
+        list: true,
+        static: true,
     });
+    // Sample dashboard data
+    const [statistic, setStatistic] = useState(defaultStatic);
 
-    const [recentEvents] = useState([
+    const [recentEvents, setRecentEvents] = useState([
         {
             id: 1,
             name: 'Tech Conference 2024',
@@ -99,15 +108,15 @@ export default function DashboardPage() {
     const eventColumns = [
         {
             title: 'Event Name',
-            dataIndex: 'name',
-            key: 'name',
+            dataIndex: 'title',
+            key: 'title',
             render: (text) => <Text strong>{text}</Text>
         },
         {
             title: 'Date',
-            dataIndex: 'date',
-            key: 'date',
-            render: (date) => new Date(date).toLocaleDateString()
+            dataIndex: 'startDate',
+            key: 'startDate',
+            render: (startDate) => new Date(startDate).toLocaleDateString()
         },
         {
             title: 'Status',
@@ -115,64 +124,76 @@ export default function DashboardPage() {
             key: 'status',
             render: (status) => {
                 const colors = {
-                    active: 'green',
-                    planning: 'blue',
-                    sold_out: 'red'
+                    ACTIVE: 'green',
+                    ENDED: 'red'
                 };
                 return <Tag color={colors[status]}>{status.replace('_', ' ').toUpperCase()}</Tag>;
             }
         },
         {
             title: 'Tickets Sold',
-            dataIndex: 'tickets',
-            key: 'tickets',
-            render: (tickets) => tickets.toLocaleString()
+            dataIndex: 'totalTicketsSold',
+            key: 'totalTicketsSold',
+            render: (totalTicketsSold) => totalTicketsSold?.toLocaleString()
         },
         {
             title: 'Revenue',
-            dataIndex: 'revenue',
-            key: 'revenue',
-            render: (revenue) => `$${revenue.toLocaleString()}`
+            dataIndex: 'totalRevenue',
+            key: 'totalRevenue',
+            render: (totalRevenue) => `$${totalRevenue?.toLocaleString()}`
         },
-        {
-            title: 'Actions',
-            key: 'actions',
-            render: (item, record) => (
-                <Space>
-                    <Tooltip title="View">
-                        <Button
-                            type="text"
-                            icon={<EyeOutlined />}
-                            style={{ color: '#667eea' }}
-                        />
-                    </Tooltip>
-                    <Tooltip title="Edit">
-                        <Button
-                            type="text"
-                            icon={<EditOutlined />}
-                            style={{ color: '#52c41a' }}
-                        />
-                    </Tooltip>
-                    <Popconfirm
-                        title="Delete Role"
-                        description="Are you sure you want to delete this role?"
-                        onConfirm={() => handleDelete(record.id)}
-                        okText="Yes"
-                        cancelText="No"
-                    >
-                        <Tooltip title="Delete">
-                            <Button type="text" danger icon={<DeleteOutlined />} />
-                        </Tooltip>
-                    </Popconfirm>
-                </Space>
-            )
-        }
     ];
 
-    
-    const handleDelete = (id) => {
-        message.success('Role deleted successfully!');
-    };
+    const fetchStatic = useCallback(async () => {
+        try {
+            setLoading(pre => ({ ...pre, static: true }));
+            // Mock API call
+            const res = await httpClient.get(DASHBOARD_STATIC_URL).then(res => res.data)
+
+            if (res.status === 200) {
+                setStatistic({ ...res.data });
+            } else {
+                setStatistic({ ...defaultStatic });
+            }
+        } catch (error) {
+            setStatistic({ ...defaultStatic });
+        } finally {
+            setLoading(pre => ({ ...pre, static: false }));
+        }
+    }, [defaultStatic]);
+
+    const debounceFetchStatic = useCallback(debounce(fetchStatic, 300), [fetchStatic]);
+
+    useEffect(() => {
+        debounceFetchStatic();
+        return debounceFetchStatic.cancel;
+    }, [debounceFetchStatic]);
+
+
+    const fetchData = useCallback(async () => {
+        try {
+            setLoading(pre => ({ ...pre, list: true }));
+            // Mock API call
+            const res = await httpClient.get(DASHBOARD_RECENT_EVENT_URL).then(res => res.data)
+
+            if (res.status === 200) {
+                setRecentEvents([...res.data]);
+            } else {
+                setRecentEvents([]);
+            }
+        } catch (error) {
+            setRecentEvents([]);
+        } finally {
+            setLoading(pre => ({ ...pre, list: false }));
+        }
+    }, []);
+
+    const debounceFetchData = useCallback(debounce(fetchData, 300), [fetchData]);
+
+    useEffect(() => {
+        debounceFetchData();
+        return debounceFetchData.cancel;
+    }, [debounceFetchData]);
 
     return (
         <div>
@@ -188,73 +209,81 @@ export default function DashboardPage() {
             {/* Stats Cards */}
             <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
                 <Col xs={24} sm={12} md={6}>
-                    <Card>
-                        <Statistic
-                            title="Total Events"
-                            value={dashboardStats.totalEvents}
-                            prefix={<CalendarOutlined style={{ color: token.colorPrimary }} />}
-                            valueStyle={{ color: token.colorPrimary }}
-                        />
-                        <Progress
-                            percent={75}
-                            // strokeColor={brandColors.gradient}
-                            size="small"
-                            showInfo={false}
-                            style={{ marginTop: '8px' }}
-                        />
-                    </Card>
+                    <Spin spinning={loading.static}>
+                        <Card>
+                            <Statistic
+                                title="Total Events"
+                                value={statistic.totalEvents}
+                                prefix={<CalendarOutlined style={{ color: token.colorPrimary }} />}
+                                valueStyle={{ color: token.colorPrimary }}
+                            />
+                            <Progress
+                                percent={75}
+                                // strokeColor={brandColors.gradient}
+                                size="small"
+                                showInfo={false}
+                                style={{ marginTop: '8px' }}
+                            />
+                        </Card>
+                    </Spin>
                 </Col>
                 <Col xs={24} sm={12} md={6}>
-                    <Card>
-                        <Statistic
-                            title="Active Users"
-                            value={dashboardStats.activeUsers}
-                            prefix={<TeamOutlined style={{ color: token.colorSuccess }} />}
-                            valueStyle={{ color: token.colorSuccess }}
-                        />
-                        <Progress
-                            percent={85}
-                            strokeColor="#52c41a"
-                            size="small"
-                            showInfo={false}
-                            style={{ marginTop: '8px' }}
-                        />
-                    </Card>
+                    <Spin spinning={loading.static}>
+                        <Card>
+                            <Statistic
+                                title="Active Users"
+                                value={statistic.activeUsers}
+                                prefix={<TeamOutlined style={{ color: token.colorSuccess }} />}
+                                valueStyle={{ color: token.colorSuccess }}
+                            />
+                            <Progress
+                                percent={85}
+                                strokeColor="#52c41a"
+                                size="small"
+                                showInfo={false}
+                                style={{ marginTop: '8px' }}
+                            />
+                        </Card>
+                    </Spin>
                 </Col>
                 <Col xs={24} sm={12} md={6}>
-                    <Card>
-                        <Statistic
-                            title="Total Revenue"
-                            value={dashboardStats.totalRevenue}
-                            prefix="$"
-                            suffix={<RiseOutlined style={{ color: token.colorWarning }} />}
-                            valueStyle={{ color: token.colorWarning }}
-                        />
-                        <Progress
-                            percent={90}
-                            strokeColor="#faad14"
-                            size="small"
-                            showInfo={false}
-                            style={{ marginTop: '8px' }}
-                        />
-                    </Card>
+                    <Spin spinning={loading.static}>
+                        <Card>
+                            <Statistic
+                                title="Total Revenue"
+                                value={statistic.totalRevenue}
+                                prefix="$"
+                                suffix={<RiseOutlined style={{ color: token.colorWarning }} />}
+                                valueStyle={{ color: token.colorWarning }}
+                            />
+                            <Progress
+                                percent={90}
+                                strokeColor="#faad14"
+                                size="small"
+                                showInfo={false}
+                                style={{ marginTop: '8px' }}
+                            />
+                        </Card>
+                    </Spin>
                 </Col>
                 <Col xs={24} sm={12} md={6}>
-                    <Card>
-                        <Statistic
-                            title="Tickets Sold"
-                            value={dashboardStats.ticketsSold}
-                            prefix={<TrophyOutlined style={{ color: token.colorError }} />}
-                            valueStyle={{ color: token.colorError }}
-                        />
-                        <Progress
-                            percent={65}
-                            strokeColor="#ff4d4f"
-                            size="small"
-                            showInfo={false}
-                            style={{ marginTop: '8px' }}
-                        />
-                    </Card>
+                    <Spin spinning={loading.static}>
+                        <Card>
+                            <Statistic
+                                title="Tickets Sold"
+                                value={statistic.ticketsSold}
+                                prefix={<TrophyOutlined style={{ color: token.colorError }} />}
+                                valueStyle={{ color: token.colorError }}
+                            />
+                            <Progress
+                                percent={65}
+                                strokeColor="#ff4d4f"
+                                size="small"
+                                showInfo={false}
+                                style={{ marginTop: '8px' }}
+                            />
+                        </Card>
+                    </Spin>
                 </Col>
             </Row>
 
