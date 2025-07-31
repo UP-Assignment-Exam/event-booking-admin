@@ -16,6 +16,7 @@ import {
     Space,
     Tooltip,
     Typography,
+    Image,
 } from 'antd';
 import {
     CalendarOutlined,
@@ -28,10 +29,12 @@ import {
     DeleteOutlined,
     InfoCircleOutlined,
     ShoppingCartOutlined,
+    EnvironmentOutlined,
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import httpClient from '../../../../../utils/HttpClient';
 import { CREATE_EVENTS_URL, UPDATE_EVENTS_URL } from '../../../../../constants/Url';
+import UploadComponent from '../../../../../components/uploads/UploadComponent';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -61,6 +64,8 @@ function ToggleEventModal(props, ref) {
                 description: data.description,
                 organization: data.organization,
                 category: data.category,
+                imageUrl: data.imageUrl,
+                location: data.location,
                 ticketTypes: data.ticketTypes?.map(ticket => ({
                     ticketTypeId: ticket.ticketTypeId,
                     price: ticket.price,
@@ -109,6 +114,10 @@ function ToggleEventModal(props, ref) {
         }
     };
 
+    const handleUploadSuccess = (url) => {
+        form.setFieldsValue({ imageUrl: url });
+    };
+
     useImperativeHandle(ref, () => ({
         openModal: async (eventData, modalMode) => {
             setOpen(true);
@@ -122,6 +131,8 @@ function ToggleEventModal(props, ref) {
                     description: eventData.description,
                     organization: eventData.organization?._id,
                     category: eventData.category?._id,
+                    imageUrl: eventData?.imageUrl,
+                    location: eventData?.location,
                     ticketTypes: eventData.ticketTypes?.map(ticket => ({
                         ticketTypeId: ticket.ticketTypeId?._id,
                         price: ticket.price,
@@ -179,6 +190,30 @@ function ToggleEventModal(props, ref) {
                     size="small"
                     style={{ marginBottom: '20px' }}
                 >
+                    {/* Upload component */}
+                    <Form.Item label="Image">
+                        <UploadComponent onUploadSuccess={handleUploadSuccess} />
+                    </Form.Item>
+
+                    <Form.Item shouldUpdate={(prev, curr) => prev.imageUrl !== curr.imageUrl}>
+                        {({ getFieldValue }) => {
+                            const imageUrl = getFieldValue('imageUrl');
+                            return imageUrl ? (
+                                <Image
+                                    width={150}
+                                    src={imageUrl}
+                                    alt="Image preview"
+                                    style={{ marginBottom: 16, borderRadius: 8 }}
+                                />
+                            ) : null;
+                        }}
+                    </Form.Item>
+
+                    {/* Hidden input for imageUrl */}
+                    <Form.Item name="imageUrl" hidden>
+                        <Input />
+                    </Form.Item>
+
                     <Form.Item
                         name="title"
                         label="Event Title"
@@ -210,6 +245,23 @@ function ToggleEventModal(props, ref) {
                             rows={4}
                             showCount
                             maxLength={1000}
+                        />
+                    </Form.Item>
+
+                    <Form.Item
+                        name="location"
+                        label="Event Location"
+                        rules={[
+                            { required: true, message: 'Please enter event location' },
+                            { min: 3, message: 'Location must be at least 3 characters' },
+                            { max: 200, message: 'Location cannot exceed 200 characters' }
+                        ]}
+                    >
+                        <Input
+                            prefix={<EnvironmentOutlined />}
+                            placeholder="Enter event location"
+                            showCount
+                            maxLength={200}
                         />
                     </Form.Item>
 
